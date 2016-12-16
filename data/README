@@ -1,0 +1,8 @@
+chr1.genes.train.filtered.fa.gz
+    Training set of genes on human chromosome 1 longer than 1.000 nt, shorter than 100.000 nt and corresponding DNA sequences.
+
+chr1.genes.test.filtered.fa.gz
+    Test set of genes on human chromosome 1 longer than 1.000 nt, shorter than 100.000 nt and corresponding DNA sequences.
+
+chr1.tdp43binding.bed.gz:
+    Binding sites of TDP-43 on human chromosome 1.
