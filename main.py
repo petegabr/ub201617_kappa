@@ -2,6 +2,8 @@ from Bio import SeqIO
 from Bio.Alphabet import Alphabet
 from Bio.HMM import MarkovModel, Trainer, Utilities
 from Bio.Seq import Seq
+from itertools import permutations
+
 
 
 class StateAlphabet(Alphabet):
@@ -10,6 +12,14 @@ class StateAlphabet(Alphabet):
 
 class NucleotideAlphabet(Alphabet):
     letters = ['A', 'C', 'T', 'G']
+
+class Kmer2Alphabet(Alphabet):
+    nucs = ['A', 'C', 'T', 'G']
+    letters = ["".join(p) for p in list(permutations(nucs, 2))]
+
+class Kmer3Alphabet(Alphabet):
+    nucs = ['A', 'C', 'T', 'G']
+    letters = ["".join(p) for p in list(permutations(nucs, 3))]
 
 
 if __name__ == '__main__':
@@ -22,7 +32,6 @@ if __name__ == '__main__':
     with open('data/chr1.genes.test.filtered.fa') as handle:
         test = list(SeqIO.parse(
             handle, format='fasta', alphabet=NucleotideAlphabet()))
-
 
     mm_builder = MarkovModel.MarkovModelBuilder(
         StateAlphabet(), NucleotideAlphabet())
