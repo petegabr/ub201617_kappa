@@ -159,6 +159,34 @@ def train_mm(state_alph, emm_alph, strnd, n, trainer='BW'):
         """
         return None
 
+def do_decoding(data, alphabet, n, strd, model):
+    """
+    get N decoded test sequences on strand strnd (-1 or 1)
+
+    Parameters
+    ----------
+    data: List[Seq] ... test data
+    alphabet: state alphabet used
+    n: int
+    strnd: int ... (-1, 1)
+    model: MarkovModel.HiddenMarkovModel  ... trained model
+
+    Returns
+    -------
+    List[(start, end, Seq)]... start, end so zacetne in koncne koordinate testnega primera, Seq je dekodirana vrednost
+    """
+
+    decoded = []
+    for d in data[0:n]:
+        chrom, strnd, start, end = \
+            d.id.strip().split(',')
+        if int(strnd) == strd:
+            dec = model.viterbi(d.seq, alphabet)
+            decoded.append((int(start), int(end), dec))
+    return decoded
+
+
+
 if __name__ == '__main__':
     # Read training data
     train = list(read_training_data(Kmer1Alphabet()))
@@ -178,11 +206,13 @@ if __name__ == '__main__':
 
     # sys.exit(0)
 
+    #strand
+    s = -1
     # train model with these params
-    trained_model = train_mm(BinaryStateAlphabet, Kmer1Alphabet, -1, 2, 'BW')
+    trained_model = train_mm(BinaryStateAlphabet, Kmer1Alphabet, s, 2, 'BW')
 
-    """
-    # vitrebi decoder multi na testnem primeru
-    decoded = trained_model.viterbi(test[0].seq, BinaryStateAlphabet)
+    #decode N test cases from dataset
+    decoded = do_decoding(test, BinaryStateAlphabet, 2, s, trained_model)
     print(decoded)
-    """
+
+    # TODO: primerjava decoded testnih primerov z binding sites podatki
