@@ -1,8 +1,28 @@
 chr1.genes.train.filtered.fa.gz
     Training set of genes on human chromosome 1 longer than 1.000 nt, shorter than 100.000 nt and corresponding DNA sequences.
+	
+	Name meaning: chr1,[1/-1],[begin],[end]
+	chr1: chromosome1
+	1/-1: positive/negative strand
+	begin: absolute beginning inside chr1 genome
+	end: absolute ending inside chr1 genome
 
 chr1.genes.test.filtered.fa.gz
     Test set of genes on human chromosome 1 longer than 1.000 nt, shorter than 100.000 nt and corresponding DNA sequences.
+	
+	Name meaning: chr1,[1/-1],[begin],[end]
+	chr1: chromosome1
+	1/-1: positive/negative strand
+	begin: absolute beginning inside chr1 genome
+	end: absolute ending inside chr1 genome
 
 chr1.tdp43binding.bed.gz:
     Binding sites of TDP-43 on human chromosome 1.
+	
+	column 1: chromosome1
+	column 2: beginning of binding
+	column 3: end of binding
+	column 4: binding test method and RBP name
+	column 5: binding strength
+	column 6: binding on positive/negative strand
+	
