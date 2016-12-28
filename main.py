@@ -1,3 +1,5 @@
+import sys
+
 from collections import deque
 from itertools import permutations
 
@@ -10,8 +12,8 @@ from collections import Counter
 from parse import read_training_data, read_testing_data, read_binding_sites
 
 
-class StateAlphabet(Alphabet):
-    letters = [str(i) for i in range(3)]
+class BinaryStateAlphabet(Alphabet):
+    letters = ['N', 'B']  # N - non binding site, B - binding site
 
 
 class Kmer1Alphabet(NucleotideAlphabet):
@@ -54,7 +56,8 @@ def stop_condition(log_likelihood_change, num_iterations):
 
 
 def get_binding_sites(binding_sites, data):
-    """Get a list of binding site sequences from a dataset.
+    """
+    Get a list of binding site sequences from a dataset.
 
     Parameters
     ----------
@@ -86,43 +89,100 @@ def get_binding_sites(binding_sites, data):
 
     return list(sites)
 
+
+def get_training_seq(data, strd, n, alphabet, trainer='BW', mm_model=None):
+    """
+    Get a list of N training sequences from strand (-1 or 1) for BW model training. If trainer used is KST - construct
+    state path using viterbi decoding (required)
+
+    Parameters
+    ----------
+    data : List[Seq]
+    strand: int
+    n : int
+    alphabet: state alphabet
+    trainer: string (which trainer is used: BW or KST)
+    mm_model: model for viterbi decoding for path construction
+
+    Returns
+    -------
+    List[TrainingSequence]
+
+    """
+
+    training_seq_multi = []
+    for t in data[0:n]:
+        chrom, strnd, start, end = \
+            t.id.strip().split(',')
+        if int(strnd) == strd:
+            if trainer == 'BW':
+                training_seq_multi.append(Trainer.TrainingSequence(t.seq, Seq('', alphabet)))
+            # TODO: else: kst training sequence with known state path
+    return training_seq_multi
+
+
+def train_mm(state_alph, emm_alph, strnd, n, trainer='BW'):
+    """
+    get trained markov model using BW or Known State Trainer (KST)
+
+    Parameters
+    ----------
+    state_alph: state alphabet
+    emm_alph: emission alphabet
+    strnd: int (na katerem strandu ucimo model)
+    n: int (stevilo training nizov za ucenje)
+    trainer : string (BW ali KTS)
+
+    Returns
+    -------
+    MarkovModel.HiddenMarkovModel
+    """
+
+    mm_builder = MarkovModel.MarkovModelBuilder(
+        state_alph, emm_alph)
+    mm_builder.allow_all_transitions()
+    mm_builder.set_random_probabilities()
+    mm_model = mm_builder.get_markov_model()
+
+    training_seq = get_training_seq(train, strnd, n, state_alph, trainer, mm_model)
+
+    if trainer == 'BW':
+        bw_trainer = Trainer.BaumWelchTrainer(mm_model)
+        trained_bw = bw_trainer.train(training_seq, stop_condition)
+        return trained_bw
+    else:
+        # TODO
+        """
+        kst_trainer = Trainer.KnownStateTrainer(mm_model)
+        trained_kst = kst_trainer.train(training_seq)
+        return trained_kst
+        """
+        return None
+
 if __name__ == '__main__':
     # Read training data
     train = list(read_training_data(Kmer1Alphabet()))
     # Read testing data
-    # test = read_testing_data(Kmer1Alphabet())
+    test = list(read_testing_data(Kmer1Alphabet()))
+
     # Read the binding sites
     binding_sites = list(read_binding_sites())
+
+    """
     # Show what actually occurs at the binding sites
     site_seqs = get_binding_sites(binding_sites, train[:50])
     for ss in site_seqs:
         print(ss)
-        # print(SeqContent(ss))
+        print(SeqContent(ss))
+    """
 
-    import sys
-    sys.exit(0)
+    # sys.exit(0)
 
-    mm_builder = MarkovModel.MarkovModelBuilder(
-        StateAlphabet(), Kmer1Alphabet())
-    mm_builder.allow_all_transitions()
-    mm_builder.set_random_probabilities()
+    # train model with these params
+    trained_model = train_mm(BinaryStateAlphabet, Kmer1Alphabet, -1, 2, 'BW')
 
-    bw_model = mm_builder.get_markov_model()
-
-    trainer = Trainer.BaumWelchTrainer(bw_model)
-
-    # Convert the first gene to a training sequence for the HMM
-    # training_seq = Trainer.TrainingSequence(
-    #     train[0].seq, Seq('', StateAlphabet()))
-    # trained_mm = trainer.train([training_seq], stop_condition)
-
-    # Convert the first `n` genes to training sequnces for the HMM
-    # n = 2
-    # training_seq_multi = [
-    #     Trainer.TrainingSequence(t.seq, Seq('', StateAlphabet())) for t in
-    #     train[0:n]]
-    # trainer on multiple training sequences
-    # trained_mm_multi = trainer.train(training_seq_multi, stop_condition)
+    """
     # vitrebi decoder multi na testnem primeru
-    # decoded_multi = trained_mm_multi.viterbi(test[0].seq, StateAlphabet())
-    # print(decoded_multi)
+    decoded = trained_model.viterbi(test[0].seq, BinaryStateAlphabet)
+    print(decoded)
+    """
