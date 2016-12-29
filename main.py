@@ -57,31 +57,6 @@ def stop_condition(log_likelihood_change, num_iterations):
 def site_contained_within(rec_start, rec_end, binding_start, binding_end):
         return rec_start <= binding_start and rec_end >= binding_end
 
-def get_binding_sites_coord(binding_sites, record):
-    """
-    Get a list of coordinates of binding sites and its direction on this record.
-
-    Parameters
-    ----------
-    binding_sites : List[TDPBindingSites]
-    record : Seq
-
-    Returns
-    -------
-    List[(int, int, int)] ... (bs_start_offset, bs_end_offset, bs_strand)
-
-    """
-
-    coords = []
-    chrom, strnd, start, end = record.id.strip().split(',')
-    strnd, start, end = int(strnd), int(start), int(end)
-    for site in binding_sites:
-        if site_contained_within(start, end, site.start, site.end):
-            # Calculate the offset start and end of the binding site
-            offset_start, offset_end = site.start - start, site.end - start
-            coords.append((offset_start, offset_end, site.direction))
-    return coords
-
 
 def get_binding_sites(binding_sites, data):
     """
