@@ -6,7 +6,7 @@ KNOWN_BINDING_SITES_DATA = 'data/iCLIP_TDP-43_tollervey2011_hg19_chr1.bed'
 
 
 class TDPBindingSites:
-    DIRECTION_POSITIVE, DIRECTION_NEGATIVE = range(2)
+    DIRECTION_NEGATIVE, DIRECTION_POSITIVE = range(2)
 
     def __init__(self, chromosome, start, end, method, strength, direction):
         self.chromosome = chromosome
@@ -26,7 +26,7 @@ class TDPBindingSites:
 
     def __repr__(self):
         return '{}\t{}\t{}\t{}\t{}'.format(
-            self.chromosome, self.start, self.stop, self.strength,
+            self.chromosome, self.start, self.end, self.strength,
             self.direction)
 
 
@@ -46,4 +46,4 @@ def read_testing_data(alphabet=None):
         yield from SeqIO.parse(handle, format='fasta', alphabet=alphabet)
 
 if __name__ == '__main__':
-    print(list(read_binding_sites()))
+    print("\n".join(map(str, list(read_binding_sites()))))
