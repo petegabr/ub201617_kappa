@@ -54,6 +54,34 @@ def stop_condition(log_likelihood_change, num_iterations):
     else:
         return 0
 
+def site_contained_within(rec_start, rec_end, binding_start, binding_end):
+        return rec_start <= binding_start and rec_end >= binding_end
+
+def get_binding_sites_coord(binding_sites, record):
+    """
+    Get a list of coordinates of binding sites and its direction on this record.
+
+    Parameters
+    ----------
+    binding_sites : List[TDPBindingSites]
+    record : Seq
+
+    Returns
+    -------
+    List[(int, int, int)] ... (bs_start_offset, bs_end_offset, bs_strand)
+
+    """
+
+    coords = []
+    chrom, strnd, start, end = record.id.strip().split(',')
+    strnd, start, end = int(strnd), int(start), int(end)
+    for site in binding_sites:
+        if site_contained_within(start, end, site.start, site.end):
+            # Calculate the offset start and end of the binding site
+            offset_start, offset_end = site.start - start, site.end - start
+            coords.append((offset_start, offset_end, site.direction))
+    return coords
+
 
 def get_binding_sites(binding_sites, data):
     """
@@ -71,9 +99,6 @@ def get_binding_sites(binding_sites, data):
     """
     sites = deque()
 
-    def site_contained_within(rec_start, rec_end, binding_start, binding_end):
-        return rec_start <= binding_start and rec_end >= binding_end
-
     for record in data:
         *_, start, end = record.id.split(',')
         start, end = int(start), int(end)
@@ -90,19 +115,41 @@ def get_binding_sites(binding_sites, data):
     return list(sites)
 
 
-def get_training_seq(data, strd, n, alphabet, trainer='BW', mm_model=None):
+def make_path(record, bs_data, state_alph):
     """
-    Get a list of N training sequences from strand (-1 or 1) for BW model training. If trainer used is KST - construct
-    state path using viterbi decoding (required)
+    Generate state path of emitted record, based on binding sites data and alphabets used
 
     Parameters
     ----------
-    data : List[Seq]
-    strand: int
-    n : int
-    alphabet: state alphabet
-    trainer: string (which trainer is used: BW or KST)
-    mm_model: model for viterbi decoding for path construction
+    record : Seq ... emitted sequence
+    bs_data: List[TDPBindingSites] ... binding sites data
+    state_alph: binary state alphabet
+
+    Returns
+    -------
+    ??
+
+    """
+
+    chrom, strnd, start, end = record.id.strip().split(',')
+    emm_alph = record.seq.alphabet
+
+    # TODO
+
+    return None
+
+
+def get_training_seq(train_data, bs_data, state_alph, n):
+    """
+    Get a list of N training sequences with corresponding state paths
+
+    Parameters
+    ----------
+    train_data : List[Seq] ... training dataset
+    bs_data: List[TDPBindingSites] ... binding sites data
+    state_alph: state alphabet
+    emm_alph: emission alphabet
+    n: int ... number of training emissions to use
 
     Returns
     -------
@@ -110,33 +157,36 @@ def get_training_seq(data, strd, n, alphabet, trainer='BW', mm_model=None):
 
     """
 
-    training_seq_multi = []
-    for t in data[0:n]:
-        chrom, strnd, start, end = \
-            t.id.strip().split(',')
-        if int(strnd) == strd:
-            if trainer == 'BW':
-                training_seq_multi.append(Trainer.TrainingSequence(t.seq, Seq('', alphabet)))
-            # TODO: else: kst training sequence with known state path
-    return training_seq_multi
+    training_seqs = []
+    for record in train_data[0:n]:
+
+        path = make_path(record, bs_data, state_alph)  # TODO
+
+        sys.exit(0)
+        training_seqs.append(Trainer.TrainingSequence(record.seq, Seq(path, state_alph)))
+    return training_seqs
 
 
-def train_mm(state_alph, emm_alph, strnd, n, trainer='BW'):
+def train_mm(train_data, bs_data, state_alph, emm_alph, trainer='BW', n=None):
     """
     get trained markov model using BW or Known State Trainer (KST)
 
     Parameters
     ----------
+    train_data: List[Seq] ... training dataset
+    bs_data: List[TDPBindingSites] ... binding sites dataset
     state_alph: state alphabet
     emm_alph: emission alphabet
-    strnd: int (na katerem strandu ucimo model)
-    n: int (stevilo training nizov za ucenje)
     trainer : string (BW ali KTS)
+    n: int (stevilo training nizov za ucenje)
 
     Returns
     -------
     MarkovModel.HiddenMarkovModel
     """
+
+    if n is None:
+        n = len(train_data)
 
     mm_builder = MarkovModel.MarkovModelBuilder(
         state_alph, emm_alph)
@@ -144,47 +194,20 @@ def train_mm(state_alph, emm_alph, strnd, n, trainer='BW'):
     mm_builder.set_random_probabilities()
     mm_model = mm_builder.get_markov_model()
 
-    training_seq = get_training_seq(train, strnd, n, state_alph, trainer, mm_model)
+    #make training sequence with corresponding state paths from first n emissions
+    training_seq = get_training_seq(train_data, bs_data, state_alph, n)
 
+    sys.exit(0)
+
+    # TODO: test
     if trainer == 'BW':
         bw_trainer = Trainer.BaumWelchTrainer(mm_model)
         trained_bw = bw_trainer.train(training_seq, stop_condition)
         return trained_bw
     else:
-        # TODO
-        """
         kst_trainer = Trainer.KnownStateTrainer(mm_model)
         trained_kst = kst_trainer.train(training_seq)
         return trained_kst
-        """
-        return None
-
-def do_decoding(data, alphabet, n, strd, model):
-    """
-    get N decoded test sequences on strand strnd (-1 or 1)
-
-    Parameters
-    ----------
-    data: List[Seq] ... test data
-    alphabet: state alphabet used
-    n: int
-    strnd: int ... (-1, 1)
-    model: MarkovModel.HiddenMarkovModel  ... trained model
-
-    Returns
-    -------
-    List[(start, end, Seq)]... start, end so zacetne in koncne koordinate testnega primera, Seq je dekodirana vrednost
-    """
-
-    decoded = []
-    for d in data[0:n]:
-        chrom, strnd, start, end = \
-            d.id.strip().split(',')
-        if int(strnd) == strd:
-            dec = model.viterbi(d.seq, alphabet)
-            decoded.append((int(start), int(end), dec))
-    return decoded
-
 
 
 if __name__ == '__main__':
@@ -192,27 +215,22 @@ if __name__ == '__main__':
     train = list(read_training_data(Kmer1Alphabet()))
     # Read testing data
     test = list(read_testing_data(Kmer1Alphabet()))
-
     # Read the binding sites
     binding_sites = list(read_binding_sites())
 
     """
     # Show what actually occurs at the binding sites
-    site_seqs = get_binding_sites(binding_sites, train[:50])
+    site_seqs = get_binding_sites(binding_sites, train[:2])
     for ss in site_seqs:
         print(ss)
-        print(SeqContent(ss))
+        # print(SeqContent(ss))
     """
 
-    # sys.exit(0)
-
-    #strand
-    s = -1
     # train model with these params
-    trained_model = train_mm(BinaryStateAlphabet, Kmer1Alphabet, s, 2, 'BW')
+    trained_model = train_mm(train, binding_sites, BinaryStateAlphabet, Kmer1Alphabet, 'BW', 1)
 
-    #decode N test cases from dataset
-    decoded = do_decoding(test, BinaryStateAlphabet, 2, s, trained_model)
-    print(decoded)
+    sys.exit(0)
 
-    # TODO: primerjava decoded testnih primerov z binding sites podatki
+    # TODO: viterbi decoding testnih primerov
+
+    # TODO: evaluacija: primerjava decoded testnih primerov z binding sites podatki
