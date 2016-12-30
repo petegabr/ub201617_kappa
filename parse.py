@@ -35,6 +35,7 @@ def read_binding_sites():
         for line in handle:
             yield TDPBindingSites.from_string(line)
 
+
 def read_data(filename, alphabet):
     with open(filename) as handle:
         for seq in SeqIO.parse(handle, format='fasta', alphabet=alphabet):
@@ -43,24 +44,10 @@ def read_data(filename, alphabet):
             seq.start, seq.end, seq.direction = start, end, direction
             yield seq
 
+
 def read_training_data(alphabet=None):
     yield from read_data(TRAIN_DATA, alphabet)
 
 
 def read_testing_data(alphabet=None):
     yield from read_data(TEST_DATA, alphabet)
-            
-""" DEPRECATED
-
-def read_training_data(alphabet=None):
-    with open(TRAIN_DATA) as handle:
-        yield from SeqIO.parse(handle, format='fasta', alphabet=alphabet)
-
-
-def read_testing_data(alphabet=None):
-    with open(TEST_DATA) as handle:
-        yield from SeqIO.parse(handle, format='fasta', alphabet=alphabet)
-"""
-        
-if __name__ == '__main__':
-    print("\n".join(map(str, list(read_binding_sites()))))
