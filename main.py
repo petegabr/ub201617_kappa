@@ -81,13 +81,13 @@ def get_binding_sites(binding_sites, data):
             if site_contained_within(record, site):
                 # Calculate the offset start and end of the binding site
                 offset_start, offset_end = site.start - record.start, site.end - record.start
-                sites.append(record.seq[offset_start:offset_end + 1])
+                sites.append(record.seq[offset_start:offset_end])
                 
     return sites
 
 
 def data_analysis(binding_sites, data):
-    #find genes that extend each other (end from one gene == start from another gene)
+    # find genes that extend each other (end from one gene == start from another gene)
     if True:
         a, n = [], 0
         for seq in data:
@@ -103,7 +103,7 @@ def data_analysis(binding_sites, data):
         print("\tnum occurrences:", n)
         # n > 0 iff we put train + test data in
     
-    #find how many binds have a corresponding gene
+    # find how many binds have a corresponding gene
     if True:
         n_found, n_not_found = 0, 0
         for bind in binding_sites:
@@ -120,7 +120,7 @@ def data_analysis(binding_sites, data):
         print("\tFound:", n_found, "Not found:", n_not_found)
     
     
-    #extract binding nucleotides
+    # extract binding nucleotides
     if True:
         site_seqs = get_binding_sites(binding_sites, data)
         alpha, cum = ["A", "C", "G", "T"], defaultdict(int)
@@ -146,29 +146,29 @@ def make_path(record, bs_data, state_alph):
 
     Returns
     -------
-    ??
+    Seq
 
     """
+    
+    path = [state_alph.letters[0]] * len(record.seq)
+    
+    for bind in bs_data:
+        if site_contained_within(record, bind):
+            s, e = bind.start - record.start, bind.end - record.start
+            path[s:e] = [state_alph.letters[1]] * (e - s)
 
-    chrom, strnd, start, end = record.id.strip().split(',')
-    emm_alph = record.seq.alphabet
-
-    # TODO
-
-    return None
+    return Seq("".join(path), state_alph)
 
 
-def get_training_seq(train_data, bs_data, state_alph, n):
+def get_training_seq(train_data, bs_data, state_alph):
     """
     Get a list of N training sequences with corresponding state paths
 
     Parameters
     ----------
-    train_data : List[Seq] ... training dataset
+    train_data : List[SeqRecord] ... training dataset
     bs_data: List[TDPBindingSites] ... binding sites data
-    state_alph: state alphabet
-    emm_alph: emission alphabet
-    n: int ... number of training emissions to use
+    state_alph: Alphabet ... state alphabet
 
     Returns
     -------
@@ -177,16 +177,14 @@ def get_training_seq(train_data, bs_data, state_alph, n):
     """
 
     training_seqs = []
-    for record in train_data[0:n]:
-
-        path = make_path(record, bs_data, state_alph)  # TODO
-
-        sys.exit(0)
-        training_seqs.append(Trainer.TrainingSequence(record.seq, Seq(path, state_alph)))
+    for record in train_data:
+        path = make_path(record, bs_data, state_alph)
+        training_seqs.append(Trainer.TrainingSequence(record.seq, path))
+    
     return training_seqs
 
 
-def train_mm(train_data, bs_data, state_alph, em_alph, trainer='BW', n=None):
+def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
     """
     get trained markov model using BW or Known State Trainer (KST)
 
@@ -197,38 +195,85 @@ def train_mm(train_data, bs_data, state_alph, em_alph, trainer='BW', n=None):
     state_alph: state alphabet
     em_alph: emission alphabet
     trainer : string (BW ali KTS)
-    n: int (stevilo training nizov za ucenje)
 
     Returns
     -------
     MarkovModel.HiddenMarkovModel
     """
-
-    if n is None:
-        n = len(train_data)
-
-    mm_builder = MarkovModel.MarkovModelBuilder(
-        state_alph, em_alph)
+    
+    # example HMM: https://github.com/biopython/biopython/blob/master/Tests/test_HMMCasino.py
+    
+    mm_builder = MarkovModel.MarkovModelBuilder(state_alph, em_alph)
     mm_builder.allow_all_transitions()
     mm_builder.set_random_probabilities()
     mm_model = mm_builder.get_markov_model()
 
     #make training sequence with corresponding state paths from first n emissions
-    training_seq = get_training_seq(train_data, bs_data, state_alph, n)
-
-    sys.exit(0)
-
-    # TODO: test
-    if trainer == 'BW':
+    training_seq = get_training_seq(train_data, bs_data, state_alph)
+    
+    if trainer == 'BW': # ne pride v postev ker imamo znane poti
         bw_trainer = Trainer.BaumWelchTrainer(mm_model)
         trained_bw = bw_trainer.train(training_seq, stop_condition)
         return trained_bw
-    else:
+    elif trainer == 'KST':
         kst_trainer = Trainer.KnownStateTrainer(mm_model)
         trained_kst = kst_trainer.train(training_seq)
         return trained_kst
+    else:
+        return None
 
 
+def viterbi_decode(hmm_model, sequences, state_alph=BinaryStateAlphabet):
+    """
+    return hidden paths for sequences using trained hmm
+
+    Parameters
+    ----------
+    hmm_model: HiddenMarkovModel
+    sequences: List[SeqRecord]
+
+    Returns
+    -------
+    List[Seq]
+    """
+    
+    decoded_paths = []
+    
+    for seq in sequences:
+        decoded_paths.append(hmm_model.viterbi(seq.seq, state_alph)[0])
+    
+    return decoded_paths
+
+    
+def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet):
+    # basic machine learning statistics... not the best evaluation :D
+    decoded_paths = viterbi_decode(hmm_model, test_data, state_alph)
+    real_paths = []
+    
+    for seq in test_data:
+        real_paths.append(make_path(seq, bs_data, state_alph))
+    
+    TP, TN, FP, FN = 0, 0, 0, 0
+    
+    for dp, rp in zip(decoded_paths, real_paths):
+        for i in range(len(dp)):
+            if dp[i] == "N" and rp[i] == "N": TN += 1
+            elif dp[i] == "N" and rp[i] == "B": FN += 1
+            elif dp[i] == "B" and rp[i] == "N": FP += 1
+            elif dp[i] == "B" and rp[i] == "B": TP += 1
+    
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    #F1 = 2 * precision * recall / (precision + recall)
+    
+    print("TP:", TP)
+    print("TN:", TN)
+    print("FP:", FP)
+    print("FN:", FN)
+    print("precision:", precision)
+    print("recall:", recall)
+    #print("F1:", F1)
+        
 if __name__ == '__main__':
     # Read training data
     train = list(read_training_data(Kmer1Alphabet()))
@@ -237,13 +282,18 @@ if __name__ == '__main__':
     # Read the binding sites
     binding_sites = list(read_binding_sites())
     
-    data_analysis(binding_sites, train + test)
+    #data_analysis(binding_sites, train + test)
     
     # train model with these params
-    #trained_model = train_mm(train, binding_sites, BinaryStateAlphabet, Kmer1Alphabet, 'BW', 1)
-
-    sys.exit(0)
-
-    # TODO: viterbi decoding testnih primerov
-
+    print("training model")
+    trained_model = train_hmm(train[:20], binding_sites, BinaryStateAlphabet(), Kmer1Alphabet(), 'KST')
+    print("evaluating model")
+    evaluate_model(trained_model, train[:100], binding_sites)
+    
+    #print(trained_model.transition_prob)
+    #print(trained_model.emission_prob)
+    #paths = viterbi_decode(trained_model, train[:10])
+    
     # TODO: evaluacija: primerjava decoded testnih primerov z binding sites podatki
+    
+    sys.exit(0)
