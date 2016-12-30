@@ -1,4 +1,4 @@
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, Iterable
 from itertools import product
 
 from Bio.Alphabet import Alphabet, NucleotideAlphabet
@@ -27,9 +27,19 @@ class Kmer3Alphabet(Alphabet):
 class SeqContent:
     """Calculate some useful statistics of a sequence."""
 
-    def __init__(self, seq):
-        self._counter = Counter(seq)
-        self.length = sum(self._counter.values())
+    def __init__(self, seqs):
+        # Prefer treating everything like a list of sequences
+        if not isinstance(seqs, Iterable):
+            seqs = (seqs,)
+        # Initialize variables
+        self._counter = Counter()
+        self.length = 0
+
+        for seq in seqs:
+            seq_counter = Counter(seq)
+            self._counter.update(seq_counter)
+            self.length += sum(seq_counter.values())
+
         self.A = self._counter['A'] / self.length
         self.C = self._counter['C'] / self.length
         self.G = self._counter['G'] / self.length
@@ -286,12 +296,14 @@ if __name__ == '__main__':
 
     # data_analysis(binding_sites, train + test)
 
+    print(SeqContent(get_binding_sites(binding_sites, train)))
+
     # train model with these params
-    print("training model")
-    trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
-                              Kmer1Alphabet(), 'KST')
-    print("evaluating model")
-    evaluate_model(trained_model, train[:50], binding_sites)
+    # print("training model")
+    # trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
+    #                           Kmer1Alphabet(), 'KST')
+    # print("evaluating model")
+    # evaluate_model(trained_model, train[:50], binding_sites)
 
     # print(trained_model.transition_prob)
     # print(trained_model.emission_prob)
