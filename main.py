@@ -1,7 +1,7 @@
 import sys
 
-from collections import deque
-from itertools import permutations
+from collections import deque, defaultdict
+from itertools import product
 
 from Bio import SeqIO
 from Bio.Alphabet import Alphabet, NucleotideAlphabet
@@ -17,17 +17,17 @@ class BinaryStateAlphabet(Alphabet):
 
 
 class Kmer1Alphabet(NucleotideAlphabet):
-    letters = ['A', 'C', 'T', 'G']
+    letters = ['A', 'C', 'G', 'T']
 
 
 class Kmer2Alphabet(Alphabet):
-    nucs = ['A', 'C', 'T', 'G']
-    letters = ["".join(p) for p in list(permutations(nucs, 2))]
+    nucs = ['A', 'C', 'G', 'T']
+    letters = ["".join(p) for p in product(nucs, repeat=2)]
 
 
 class Kmer3Alphabet(Alphabet):
-    nucs = ['A', 'C', 'T', 'G']
-    letters = ["".join(p) for p in list(permutations(nucs, 3))]
+    nucs = ['A', 'C', 'G', 'T']
+    letters = ["".join(p) for p in product(nucs, repeat=3)]
 
 
 class SeqContent:
@@ -54,10 +54,11 @@ def stop_condition(log_likelihood_change, num_iterations):
     else:
         return 0
 
-def site_contained_within(rec_start, rec_end, binding_start, binding_end):
-        return rec_start <= binding_start and rec_end >= binding_end
+        
+def site_contained_within(sequence, bind):
+    return sequence.start <= bind.start and sequence.end >= bind.end and sequence.direction == bind.direction
 
-
+        
 def get_binding_sites(binding_sites, data):
     """
     Get a list of binding site sequences from a dataset.
@@ -65,31 +66,74 @@ def get_binding_sites(binding_sites, data):
     Parameters
     ----------
     binding_sites : List[TDPBindingSites]
-    data : List[Seq]
+    data : List[SeqRecord]
 
     Returns
     -------
     List[Seq]
 
     """
-    sites = deque()
+    
+    sites = []
 
     for record in data:
-        *_, start, end = record.id.split(',')
-        start, end = int(start), int(end)
         for site in binding_sites:
-            if site_contained_within(start, end, site.start, site.end):
+            if site_contained_within(record, site):
                 # Calculate the offset start and end of the binding site
-                offset_start, offset_end = site.start - start, site.end - start
-                # We take the complement if the direction is negative
-                if site.direction == site.DIRECTION_POSITIVE:
-                    sites.append(record.seq[offset_start:offset_end + 1])
-                else:
-                    sites.append(record.seq.complement()[offset_start:offset_end + 1])
-
-    return list(sites)
+                offset_start, offset_end = site.start - record.start, site.end - record.start
+                sites.append(record.seq[offset_start:offset_end + 1])
+                
+    return sites
 
 
+def data_analysis(binding_sites, data):
+    #find genes that extend each other (end from one gene == start from another gene)
+    if True:
+        a, n = [], 0
+        for seq in data:
+            a.extend([(seq.start, "s", seq.direction), (seq.end, "e", seq.direction)])
+        
+        a.sort()
+        
+        for i in range(1, len(a)):
+            if a[i][0] == a[i-1][0]:
+                #print(a[i], "\t", a[i-1], "\t", a[i][2] == a[i-1][2])
+                n += 1
+        print("GENES THAT EXTEND EACH OTHER:")
+        print("\tnum occurrences:", n)
+        # n > 0 iff we put train + test data in
+    
+    #find how many binds have a corresponding gene
+    if True:
+        n_found, n_not_found = 0, 0
+        for bind in binding_sites:
+            for seq in data:
+                if site_contained_within(seq, bind):
+                    #print("Gene for bind found", "(" + str(bind) + ")")
+                    n_found += 1
+                    break;
+            else:
+                #print("Gene for bind NOT FOUND", "(" + str(bind) + ")")
+                n_not_found += 1
+                
+        print("BINDS WITH CORRESPONDING GENES:")
+        print("\tFound:", n_found, "Not found:", n_not_found)
+    
+    
+    #extract binding nucleotides
+    if True:
+        site_seqs = get_binding_sites(binding_sites, data)
+        alpha, cum = ["A", "C", "G", "T"], defaultdict(int)
+        for ss in site_seqs:
+            print(ss)
+            ss = SeqContent(ss)
+            for a in alpha:
+                cum[a] += ss._counter[a]
+        
+        for a in alpha:
+            print(a + ":", cum[a] / sum(cum.values()))
+            
+    
 def make_path(record, bs_data, state_alph):
     """
     Generate state path of emitted record, based on binding sites data and alphabets used
@@ -142,7 +186,7 @@ def get_training_seq(train_data, bs_data, state_alph, n):
     return training_seqs
 
 
-def train_mm(train_data, bs_data, state_alph, emm_alph, trainer='BW', n=None):
+def train_mm(train_data, bs_data, state_alph, em_alph, trainer='BW', n=None):
     """
     get trained markov model using BW or Known State Trainer (KST)
 
@@ -151,7 +195,7 @@ def train_mm(train_data, bs_data, state_alph, emm_alph, trainer='BW', n=None):
     train_data: List[Seq] ... training dataset
     bs_data: List[TDPBindingSites] ... binding sites dataset
     state_alph: state alphabet
-    emm_alph: emission alphabet
+    em_alph: emission alphabet
     trainer : string (BW ali KTS)
     n: int (stevilo training nizov za ucenje)
 
@@ -164,7 +208,7 @@ def train_mm(train_data, bs_data, state_alph, emm_alph, trainer='BW', n=None):
         n = len(train_data)
 
     mm_builder = MarkovModel.MarkovModelBuilder(
-        state_alph, emm_alph)
+        state_alph, em_alph)
     mm_builder.allow_all_transitions()
     mm_builder.set_random_probabilities()
     mm_model = mm_builder.get_markov_model()
@@ -192,17 +236,11 @@ if __name__ == '__main__':
     test = list(read_testing_data(Kmer1Alphabet()))
     # Read the binding sites
     binding_sites = list(read_binding_sites())
-
-    """
-    # Show what actually occurs at the binding sites
-    site_seqs = get_binding_sites(binding_sites, train[:2])
-    for ss in site_seqs:
-        print(ss)
-        # print(SeqContent(ss))
-    """
-
+    
+    data_analysis(binding_sites, train + test)
+    
     # train model with these params
-    trained_model = train_mm(train, binding_sites, BinaryStateAlphabet, Kmer1Alphabet, 'BW', 1)
+    #trained_model = train_mm(train, binding_sites, BinaryStateAlphabet, Kmer1Alphabet, 'BW', 1)
 
     sys.exit(0)
 

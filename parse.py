@@ -6,7 +6,7 @@ KNOWN_BINDING_SITES_DATA = 'data/iCLIP_TDP-43_tollervey2011_hg19_chr1.bed'
 
 
 class TDPBindingSites:
-    DIRECTION_NEGATIVE, DIRECTION_POSITIVE = range(2)
+    DIRECTION_NEGATIVE, DIRECTION_POSITIVE = -1, 1
 
     def __init__(self, chromosome, start, end, method, strength, direction):
         self.chromosome = chromosome
@@ -35,6 +35,22 @@ def read_binding_sites():
         for line in handle:
             yield TDPBindingSites.from_string(line)
 
+def read_data(filename, alphabet):
+    with open(filename) as handle:
+        for seq in SeqIO.parse(handle, format='fasta', alphabet=alphabet):
+            _, direction, start, end = seq.id.split(",")
+            direction, start, end = int(direction), int(start), int(end)
+            seq.start, seq.end, seq.direction = start, end, direction
+            yield seq
+
+def read_training_data(alphabet=None):
+    yield from read_data(TRAIN_DATA, alphabet)
+
+
+def read_testing_data(alphabet=None):
+    yield from read_data(TEST_DATA, alphabet)
+            
+""" DEPRECATED
 
 def read_training_data(alphabet=None):
     with open(TRAIN_DATA) as handle:
@@ -44,6 +60,7 @@ def read_training_data(alphabet=None):
 def read_testing_data(alphabet=None):
     with open(TEST_DATA) as handle:
         yield from SeqIO.parse(handle, format='fasta', alphabet=alphabet)
-
+"""
+        
 if __name__ == '__main__':
     print("\n".join(map(str, list(read_binding_sites()))))
