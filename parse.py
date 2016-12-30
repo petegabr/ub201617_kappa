@@ -5,7 +5,7 @@ TEST_DATA = 'data/chr1.genes.test.filtered.fa'
 KNOWN_BINDING_SITES_DATA = 'data/iCLIP_TDP-43_tollervey2011_hg19_chr1.bed'
 
 
-class TDPBindingSites:
+class TDPBindingSite:
     DIRECTION_NEGATIVE, DIRECTION_POSITIVE = -1, 1
 
     def __init__(self, chromosome, start, end, method, strength, direction):

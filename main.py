@@ -288,10 +288,11 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
 
 
 if __name__ == '__main__':
+    ALPHABET = Kmer1Alphabet()
     # Read training data
-    train = list(read_training_data(Kmer1Alphabet()))
+    train = list(read_training_data(ALPHABET))
     # Read testing data
-    test = list(read_testing_data(Kmer1Alphabet()))
+    test = list(read_testing_data(ALPHABET))
     # Read the binding sites
     binding_sites = list(read_binding_sites())
 
@@ -303,8 +304,8 @@ if __name__ == '__main__':
 
     # train model with these params
     # print("training model")
-    # trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
-    #                           Kmer1Alphabet(), 'KST')
+    # trained_model = train_hmm(train[:20], binding_sites, BinaryStateAlphabet(),
+    #                           ALPHABET), 'KST')
     # print("evaluating model")
     # evaluate_model(trained_model, train[:50], binding_sites)
 
