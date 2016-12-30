@@ -24,6 +24,11 @@ class TDPBindingSites:
             int(direction == '+')]
         return cls(chrom, start, end, method, strength, site_direction)
 
+    def is_contained_within(self, gene_record):
+        """Check if the binding site is contained within a gene sequence."""
+        return (gene_record.start <= self.start and
+                gene_record.end >= self.end)
+
     def __repr__(self):
         return '{}\t{}\t{}\t{}\t{}'.format(
             self.chromosome, self.start, self.end, self.strength,

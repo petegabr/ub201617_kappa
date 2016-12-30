@@ -50,11 +50,6 @@ class SeqContent:
             self.A * 100, self.C * 100, self.G * 100, self.T * 100)
 
 
-def site_contained_within(sequence, bind):
-    """Check if a binding site is contained within a gene sequence."""
-    return sequence.start <= bind.start and sequence.end >= bind.end
-
-
 def get_binding_sites(binding_sites, data):
     """
     Get a list of binding site sequences from a dataset.
@@ -79,17 +74,12 @@ def get_binding_sites(binding_sites, data):
     sites = []
 
     for record in data:
-        for site in binding_sites:
-            if site_contained_within(record, site):
-                if site.direction == site.DIRECTION_POSITIVE:
-                    seq = record.seq
-                else:
-                    # We only take complement, not reverse complement
-                    seq = record.seq.complement()
+        for binding_site in binding_sites:
+            if binding_site.is_contained_within(record):
                 # Calculate the offset start and end of the binding site
-                offset_start = site.start - record.start
-                offset_end = site.end - record.start
-                sites.append(seq[offset_start:offset_end])
+                offset_start = binding_site.start - record.start
+                offset_end = binding_site.end - record.start
+                sites.append(record.seq[offset_start:offset_end])
 
     return sites
 
@@ -116,7 +106,7 @@ def data_analysis(binding_sites, data):
         n_found, n_not_found = 0, 0
         for bind in binding_sites:
             for seq in data:
-                if site_contained_within(seq, bind):
+                if bind.is_contained_within(seq):
                     # print("Gene for bind found", "(" + str(bind) + ")")
                     n_found += 1
                     break;
@@ -160,7 +150,7 @@ def make_path(record, bs_data, state_alph):
     path = [state_alph.letters[0]] * len(record.seq)
 
     for bind in bs_data:
-        if site_contained_within(record, bind):
+        if bind.is_contained_within(record):
             s, e = bind.start - record.start, bind.end - record.start
             path[s:e] = [state_alph.letters[1]] * (e - s)
 
