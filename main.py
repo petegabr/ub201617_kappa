@@ -51,14 +51,19 @@ class SeqContent:
 
 
 def site_contained_within(sequence, bind):
-    return (sequence.start <= bind.start and
-            sequence.end >= bind.end
-            and sequence.direction == bind.direction)
+    """Check if a binding site is contained within a gene sequence."""
+    return sequence.start <= bind.start and sequence.end >= bind.end
 
 
 def get_binding_sites(binding_sites, data):
     """
     Get a list of binding site sequences from a dataset.
+
+    In case the direction of the binding site is negative i.e. the binding site
+    occurs on the complementary strand, we take the complement of the gene
+    sequence. We DO NOT take the reverse complement since this also reverses
+    the sequence, which invalidate the start and ending coordinates of the
+    binding site.
 
     Parameters
     ----------
@@ -76,9 +81,15 @@ def get_binding_sites(binding_sites, data):
     for record in data:
         for site in binding_sites:
             if site_contained_within(record, site):
+                if site.direction == site.DIRECTION_POSITIVE:
+                    seq = record.seq
+                else:
+                    # We only take complement, not reverse complement
+                    seq = record.seq.complement()
                 # Calculate the offset start and end of the binding site
-                offset_start, offset_end = site.start - record.start, site.end - record.start
-                sites.append(record.seq[offset_start:offset_end])
+                offset_start = site.start - record.start
+                offset_end = site.end - record.start
+                sites.append(seq[offset_start:offset_end])
 
     return sites
 
@@ -296,7 +307,9 @@ if __name__ == '__main__':
 
     # data_analysis(binding_sites, train + test)
 
-    print(SeqContent(get_binding_sites(binding_sites, train)))
+    used_binding_sites = [x for x in binding_sites
+                          if x.direction == x.DIRECTION_NEGATIVE]
+    print(SeqContent(get_binding_sites(used_binding_sites, train)))
 
     # train model with these params
     # print("training model")
