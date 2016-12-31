@@ -40,10 +40,10 @@ class SeqContent:
             self._counter.update(seq_counter)
             self.length += sum(seq_counter.values())
 
-        self.A = self._counter['A'] / self.length
-        self.C = self._counter['C'] / self.length
-        self.G = self._counter['G'] / self.length
-        self.T = self._counter['T'] / self.length
+        self.A = self._counter['A'] / (self.length or 1)
+        self.C = self._counter['C'] / (self.length or 1)
+        self.G = self._counter['G'] / (self.length or 1)
+        self.T = self._counter['T'] / (self.length or 1)
 
     def __str__(self):
         return 'A: %d%%\tC: %d%%\tG: %d%%\tT: %d%%\t' % (
@@ -76,14 +76,10 @@ def get_binding_sites(binding_sites, data):
     for record in data:
         for binding_site in binding_sites:
             if binding_site.is_contained_within(record):
-                if binding_site.direction == binding_site.DIRECTION_POSITIVE:
-                    seq = record.seq
-                else:
-                    seq = record.seq.complement()
                 # Calculate the offset start and end of the binding site
                 offset_start = binding_site.start - record.start
                 offset_end = binding_site.end - record.start
-                sites.append(seq[offset_start:offset_end])
+                sites.append(record.seq[offset_start:offset_end])
 
     return sites
 
@@ -267,10 +263,7 @@ def viterbi_decode(hmm_model, sequences, state_alph=BinaryStateAlphabet):
 def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet):
     # basic machine learning statistics... not the best evaluation :D
     decoded_paths = viterbi_decode(hmm_model, test_data, state_alph)
-    real_paths = []
-
-    for seq in test_data:
-        real_paths.append(make_path(seq, bs_data, state_alph))
+    real_paths = [make_path(seq, bs_data, state_alph) for seq in test_data]
 
     TP, TN, FP, FN = 0, 0, 0, 0
 
@@ -285,9 +278,9 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
             elif dp[i] == "B" and rp[i] == "B":
                 TP += 1
 
-    precision = TP / (TP + FP)
-    recall = TP / (TP + FN)
-    # F1 = 2 * precision * recall / (precision + recall)
+    precision = TP / ((TP + FP) or 1)
+    recall = TP / ((TP + FN) or 1)
+    # F1 = 2 * precision * recall / ((precision + recall) or 1)
 
     print("TP:", TP)
     print("TN:", TN)
@@ -309,14 +302,19 @@ if __name__ == '__main__':
 
     # data_analysis(binding_sites, train + test)
 
-    used_binding_sites = [x for x in binding_sites
-                          if x.direction == x.DIRECTION_POSITIVE]
-    print(SeqContent(get_binding_sites(used_binding_sites, train)))
+    # Until we know how to properly parse the negative strand, we'll only use
+    # the positive one since the other one does not contain the correct seqs.
+    binding_sites = [x for x in binding_sites
+                     if x.direction == x.DIRECTION_POSITIVE]
+
+    # In case we're interested in the nucleotide content within the binding
+    # sites
+    # print(SeqContent(get_binding_sites(binding_sites, train)))
 
     # train model with these params
     # print("training model")
-    # trained_model = train_hmm(train[:20], binding_sites, BinaryStateAlphabet(),
-    #                           ALPHABET), 'KST')
+    # trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
+    #                           ALPHABET, 'KST')
     # print("evaluating model")
     # evaluate_model(trained_model, train[:50], binding_sites)
 
