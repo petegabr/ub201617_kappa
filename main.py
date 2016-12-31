@@ -76,10 +76,14 @@ def get_binding_sites(binding_sites, data):
     for record in data:
         for binding_site in binding_sites:
             if binding_site.is_contained_within(record):
+                if binding_site.direction == binding_site.DIRECTION_POSITIVE:
+                    seq = record.seq
+                else:
+                    seq = record.seq.complement()
                 # Calculate the offset start and end of the binding site
                 offset_start = binding_site.start - record.start
                 offset_end = binding_site.end - record.start
-                sites.append(record.seq[offset_start:offset_end])
+                sites.append(seq[offset_start:offset_end])
 
     return sites
 
@@ -299,7 +303,7 @@ if __name__ == '__main__':
     # data_analysis(binding_sites, train + test)
 
     used_binding_sites = [x for x in binding_sites
-                          if x.direction == x.DIRECTION_NEGATIVE]
+                          if x.direction == x.DIRECTION_POSITIVE]
     print(SeqContent(get_binding_sites(used_binding_sites, train)))
 
     # train model with these params

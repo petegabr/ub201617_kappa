@@ -27,7 +27,8 @@ class TDPBindingSite:
     def is_contained_within(self, gene_record):
         """Check if the binding site is contained within a gene sequence."""
         return (gene_record.start <= self.start and
-                gene_record.end >= self.end)
+                gene_record.end >= self.end and
+                gene_record.direction == self.direction)
 
     def __repr__(self):
         return '{}\t{}\t{}\t{}\t{}'.format(
@@ -38,7 +39,7 @@ class TDPBindingSite:
 def read_binding_sites():
     with open(KNOWN_BINDING_SITES_DATA) as handle:
         for line in handle:
-            yield TDPBindingSites.from_string(line)
+            yield TDPBindingSite.from_string(line)
 
 
 def read_data(filename, alphabet):
