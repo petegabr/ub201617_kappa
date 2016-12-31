@@ -88,6 +88,13 @@ def get_binding_sites(binding_sites, data):
     return sites
 
 
+def get_gene_sequence_in(records, start, end):
+    """Get the gene sequence within a start and end range."""
+    return [record.seq[(start - record.start):(end - record.start)]
+            for record in records
+            if record.start <= start and record.end >= end]
+
+
 def data_analysis(binding_sites, data):
     # find genes that extend each other (end from one gene == start from another gene)
     if True:
