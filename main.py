@@ -281,7 +281,7 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
 
     precision = TP / ((TP + FP) or 1)
     recall = TP / ((TP + FN) or 1)
-    # F1 = 2 * precision * recall / ((precision + recall) or 1)
+    F1 = 2 * precision * recall / ((precision + recall) or 1)
 
     print("TP:", TP)
     print("TN:", TN)
@@ -289,7 +289,7 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
     print("FN:", FN)
     print("precision:", precision)
     print("recall:", recall)
-    # print("F1:", F1)
+    print("F1:", F1)
 
 
 if __name__ == '__main__':
@@ -313,15 +313,16 @@ if __name__ == '__main__':
     # print(SeqContent(get_binding_sites(binding_sites, train)))
 
     # train model with these params
-    # print("training model")
-    # trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
-    #                           ALPHABET, 'KST')
-    # print("evaluating model")
-    # evaluate_model(trained_model, train[:50], binding_sites)
+    print("training model")
+    trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
+                              ALPHABET, 'KST')
+    print("evaluating model")
+    evaluate_model(trained_model, test[:50], binding_sites)
 
 
-    # print(trained_model.transition_prob)
-    # print(trained_model.emission_prob)
-    # paths = viterbi_decode(trained_model, train[:10])
+    print(trained_model.transition_prob)
+    print(trained_model.emission_prob)
+    paths = viterbi_decode(trained_model, train[:10])
+    print(paths)
 
     # TODO: evaluacija: primerjava decoded testnih primerov z binding sites podatki
