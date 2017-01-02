@@ -157,9 +157,9 @@ def make_path(record, bs_data, state_alph):
     path = [state_alph.letters[0]] * len(record.seq)
 
     for bind in bs_data:
-        if bind.is_contained_within(record):
-            s, e = bind.start - record.start, bind.end - record.start
-            path[s:e] = [state_alph.letters[1]] * (e - s)
+            if (bind.start >= record.start) and (bind.end <= record.end):
+                 s, e = bind.start - record.start, bind.end - record.start
+                 path[s:e] = [state_alph.letters[1]] * (e - s)
 
     return Seq("".join(path), state_alph)
 
@@ -184,6 +184,7 @@ def get_training_seq(train_data, bs_data, state_alph):
     for record in train_data:
         path = make_path(record, bs_data, state_alph)
         training_seqs.append(Trainer.TrainingSequence(record.seq, path))
+
 
     return training_seqs
 
@@ -304,8 +305,8 @@ if __name__ == '__main__':
 
     # Until we know how to properly parse the negative strand, we'll only use
     # the positive one since the other one does not contain the correct seqs.
-    binding_sites = [x for x in binding_sites
-                     if x.direction == x.DIRECTION_POSITIVE]
+    # binding_sites = [x for x in binding_sites
+    #                 if x.direction == x.DIRECTION_POSITIVE]
 
     # In case we're interested in the nucleotide content within the binding
     # sites
@@ -317,6 +318,7 @@ if __name__ == '__main__':
     #                           ALPHABET, 'KST')
     # print("evaluating model")
     # evaluate_model(trained_model, train[:50], binding_sites)
+
 
     # print(trained_model.transition_prob)
     # print(trained_model.emission_prob)
