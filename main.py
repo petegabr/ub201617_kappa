@@ -1,6 +1,5 @@
 from collections import defaultdict, Counter, Iterable
 from itertools import product
-
 from Bio.Alphabet import Alphabet, NucleotideAlphabet
 from Bio.HMM import MarkovModel, Trainer
 from Bio.Seq import Seq
@@ -17,10 +16,12 @@ class Kmer1Alphabet(NucleotideAlphabet):
 
 
 class Kmer2Alphabet(Alphabet):
+    # 16 states
     letters = ["".join(p) for p in product('ACGT', repeat=2)]
 
 
 class Kmer3Alphabet(Alphabet):
+    # 64 states
     letters = ["".join(p) for p in product('ACGT', repeat=3)]
 
 
@@ -150,18 +151,52 @@ def make_path(record, bs_data, state_alph):
 
     Returns
     -------
-    Seq
+    Seq, Seq (Seq with path, Seq with (new padded) record
 
     """
 
-    path = [state_alph.letters[0]] * len(record.seq)
+    # EMISSION IN PATH LEN MORATA BITI ENAKA !!!
+    # vir: http://biopython.org/DIST/docs/api/Bio.HMM.Trainer-pysrc.html
+
+    def most_common(lst):
+        # return most common hidden state.
+        n = lst.count('N')
+        b = lst.count('B')
+        if b >= n:
+            return 'B'
+        elif n > b:
+            return 'N'
+
+    def chunks(l, n):
+        # split list l in n long chunks
+        return [most_common(l[i:i + n]) for i in range(0, len(l), n)]
+
+    emission = record.seq
+    em_alph = emission.alphabet
+
+    k = len(em_alph.letters[0])   # k of k-mers
+    if len(emission) % k != 0:
+        # pad emitted sequence with r nucleotides (A) for len%k == 0
+        r = k-(len(emission) % k)
+        emission += ''.join(['A']*r)
+
+    #new padded emission
+    record.seq = emission
+
+    #make 1-mer path of all Ns
+    path = [state_alph.letters[0]] * len(emission)
 
     for bind in bs_data:
-            if (bind.start >= record.start) and (bind.end <= record.end):
-                 s, e = bind.start - record.start, bind.end - record.start
-                 path[s:e] = [state_alph.letters[1]] * (e - s)
+        if (bind.start >= record.start) and (bind.end <= record.end):  # TODO: upostevanje stranda???
+            s, e = bind.start - record.start, bind.end - record.start
+            path[s:e] = [state_alph.letters[1]] * (e - s)
 
-    return Seq("".join(path), state_alph)
+    if k > 1:
+        #shorten path by joining k adjacent states - take the most common hidden state of chunk
+        path = chunks(path, k)
+
+    return Seq("".join(path), state_alph), record
+
 
 
 def get_training_seq(train_data, bs_data, state_alph):
@@ -182,9 +217,8 @@ def get_training_seq(train_data, bs_data, state_alph):
 
     training_seqs = []
     for record in train_data:
-        path = make_path(record, bs_data, state_alph)
+        path, record = make_path(record, bs_data, state_alph)
         training_seqs.append(Trainer.TrainingSequence(record.seq, path))
-
 
     return training_seqs
 
@@ -264,7 +298,7 @@ def viterbi_decode(hmm_model, sequences, state_alph=BinaryStateAlphabet):
 def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet):
     # basic machine learning statistics... not the best evaluation :D
     decoded_paths = viterbi_decode(hmm_model, test_data, state_alph)
-    real_paths = [make_path(seq, bs_data, state_alph) for seq in test_data]
+    real_paths = [make_path(seq, bs_data, state_alph)[0] for seq in test_data]   #make path returns 2 Seqs: path and new record
 
     TP, TN, FP, FN = 0, 0, 0, 0
 
@@ -294,6 +328,7 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
 
 if __name__ == '__main__':
     ALPHABET = Kmer1Alphabet()
+
     # Read training data
     train = list(read_training_data(ALPHABET))
     # Read testing data
@@ -316,6 +351,7 @@ if __name__ == '__main__':
     print("training model")
     trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
                               ALPHABET, 'KST')
+
     print("evaluating model")
     evaluate_model(trained_model, test[:50], binding_sites)
 
@@ -325,4 +361,4 @@ if __name__ == '__main__':
     paths = viterbi_decode(trained_model, train[:10])
     print(paths)
 
-    # TODO: evaluacija: primerjava decoded testnih primerov z binding sites podatki
+    # TODO: primerjava decoded testnih primerov z binding sites podatki
