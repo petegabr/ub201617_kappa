@@ -187,7 +187,7 @@ def make_path(record, bs_data, state_alph):
     path = [state_alph.letters[0]] * len(emission)
 
     for bind in bs_data:
-        if (bind.start >= record.start) and (bind.end <= record.end):  # TODO: upostevanje stranda???
+        if (bind.start >= record.start) and (bind.end <= record.end):
             s, e = bind.start - record.start, bind.end - record.start
             path[s:e] = [state_alph.letters[1]] * (e - s)
 
@@ -261,6 +261,11 @@ def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
     # make training sequence with corresponding state paths from first n emissions
     training_seq = get_training_seq(train_data, bs_data, state_alph)
 
+    #seq for 2kmer
+    for seq in training_seq:
+        seq.emissions = list(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])))
+        seq.states = seq.states[:-1]
+
     if trainer == 'BW':  # ne pride v postev ker imamo znane poti
         bw_trainer = Trainer.BaumWelchTrainer(mm_model)
         trained_bw = bw_trainer.train(training_seq, stop_condition)
@@ -327,12 +332,12 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
 
 
 if __name__ == '__main__':
-    ALPHABET = Kmer1Alphabet()
+    ALPHABET = Kmer2Alphabet()
 
     # Read training data
-    train = list(read_training_data(ALPHABET))
+    train = list(read_training_data(Kmer1Alphabet()))
     # Read testing data
-    test = list(read_testing_data(ALPHABET))
+    test = list(read_testing_data(Kmer1Alphabet()))
     # Read the binding sites
     binding_sites = list(read_binding_sites())
 
@@ -340,25 +345,25 @@ if __name__ == '__main__':
 
     # Until we know how to properly parse the negative strand, we'll only use
     # the positive one since the other one does not contain the correct seqs.
-    # binding_sites = [x for x in binding_sites
-    #                 if x.direction == x.DIRECTION_POSITIVE]
+    binding_sites = [x for x in binding_sites
+                     if x.direction == x.DIRECTION_POSITIVE]
 
     # In case we're interested in the nucleotide content within the binding
     # sites
     # print(SeqContent(get_binding_sites(binding_sites, train)))
 
     # train model with these params
-    print("training model")
+    # print("training model")
     trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
-                              ALPHABET, 'KST')
-
-    print("evaluating model")
-    evaluate_model(trained_model, test[:50], binding_sites)
-
-
+                               ALPHABET, 'KST')
+    #
+    # print("evaluating model")
+    # evaluate_model(trained_model, test[:50], binding_sites)
+    #
+    #
     print(trained_model.transition_prob)
     print(trained_model.emission_prob)
-    paths = viterbi_decode(trained_model, train[:10])
-    print(paths)
+    # paths = viterbi_decode(trained_model, train[:10])
+    # print(paths)
 
     # TODO: primerjava decoded testnih primerov z binding sites podatki
