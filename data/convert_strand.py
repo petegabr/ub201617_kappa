@@ -37,11 +37,9 @@ def save_binding_sites(begin, end, direction):
     else:
         for line in binding_sites_contained:
             b_start, b_end = line[1:3]
-            print(begin, end, b_start, b_end, end=" ")
             b_len = b_end - b_start
             b_start = begin + end - b_end
             b_end = b_start + b_len
-            print(b_start, b_end)
             # chr1	790704	790718	iCLIP#TDP-43_tollervey2011_hg19*TDP-43	6	+
             l = "chr1\t%s\t%s\tiCLIP#TDP-43_tollervey2011_hg19*TDP-43\t%s\t%s\n" % (
                 str(b_start), str(b_end), line[-2], line[-1])

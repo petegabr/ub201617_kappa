@@ -187,7 +187,7 @@ def make_path(record, bs_data, state_alph):
     path = [state_alph.letters[0]] * len(emission)
 
     for bind in bs_data:
-        if (bind.start >= record.start) and (bind.end <= record.end):
+        if (bind.start >= record.start) and (bind.end <= record.end) and (bind.direction == record.direction):
             s, e = bind.start - record.start, bind.end - record.start
             path[s:e] = [state_alph.letters[1]] * (e - s)
 
@@ -334,7 +334,7 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
 if __name__ == '__main__':
     ALPHABET = Kmer1Alphabet()
     STRENGTH_THRESHOLD = 0
-    DIRECTION = 1
+    # DIRECTION = 1  # change also filtering binding_sites
     # Read training data
     train = list(read_training_data(ALPHABET))
     # Read testing data
@@ -342,11 +342,12 @@ if __name__ == '__main__':
     # Read the binding sites
     binding_sites = list(read_binding_sites())
 
-    # consider just a positive strand
-    train = list(filter(lambda x: x.direction == DIRECTION, train))
-    test = list(filter(lambda x: x.direction == DIRECTION, test))
-    binding_sites = list(filter(
-            lambda x: (x.direction == x.DIRECTION_POSITIVE) and (int(x.strength) >= STRENGTH_THRESHOLD), binding_sites))
+    # train = list(filter(lambda x: x.direction == DIRECTION, train))
+    # test = list(filter(lambda x: x.direction == DIRECTION, test))
+    # binding_sites = list(filter(
+    #         lambda x: (x.direction == x.DIRECTION_NEGATIVE) and (int(x.strength) >= STRENGTH_THRESHOLD), binding_sites))
+    # binding_sites = list(filter(
+    #         lambda x: (x.direction == x.DIRECTION_POSITIVE) and (int(x.strength) >= STRENGTH_THRESHOLD), binding_sites))
 
     # data_analysis(binding_sites, train + test)
 
