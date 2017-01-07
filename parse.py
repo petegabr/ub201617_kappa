@@ -1,8 +1,11 @@
 from Bio import SeqIO
 
-TRAIN_DATA = 'data/chr1.genes.train.filtered.fa'
-TEST_DATA = 'data/chr1.genes.test.filtered.fa'
-KNOWN_BINDING_SITES_DATA = 'data/iCLIP_TDP-43_tollervey2011_hg19_chr1.bed'
+# TRAIN_DATA = 'data/chr1.genes.train.filtered.fa'
+# TEST_DATA = 'data/chr1.genes.test.filtered.fa'
+# KNOWN_BINDING_SITES_DATA = 'data/iCLIP_TDP-43_tollervey2011_hg19_chr1.bed'
+TRAIN_DATA = 'data/new_chr1.genes.train.filtered.fa'
+TEST_DATA = 'data/new_chr1.genes.test.filtered.fa'
+KNOWN_BINDING_SITES_DATA = 'data/binding_sites.bed'
 
 
 class TDPBindingSite:
@@ -45,6 +48,15 @@ def read_binding_sites():
 def read_data(filename, alphabet):
     with open(filename) as handle:
         for seq in SeqIO.parse(handle, format='fasta', alphabet=alphabet):
+            _, direction, start, end = seq.id.split(",")
+            direction, start, end = int(direction), int(start), int(end)
+            seq.start, seq.end, seq.direction = start, end, direction
+            yield seq
+
+
+def read_data2(filename):  # for testing purposes
+    with open(filename) as handle:
+        for seq in SeqIO.parse(handle, format='fasta'):
             _, direction, start, end = seq.id.split(",")
             direction, start, end = int(direction), int(start), int(end)
             seq.start, seq.end, seq.direction = start, end, direction

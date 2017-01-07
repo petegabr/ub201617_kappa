@@ -174,29 +174,28 @@ def make_path(record, bs_data, state_alph):
     emission = record.seq
     em_alph = emission.alphabet
 
-    k = len(em_alph.letters[0])   # k of k-mers
+    k = len(em_alph.letters[0])  # k of k-mers
     if len(emission) % k != 0:
         # pad emitted sequence with r nucleotides (A) for len%k == 0
-        r = k-(len(emission) % k)
-        emission += ''.join(['A']*r)
+        r = k - (len(emission) % k)
+        emission += ''.join(['A'] * r)
 
-    #new padded emission
+    # new padded emission
     record.seq = emission
 
-    #make 1-mer path of all Ns
+    # make 1-mer path of all Ns
     path = [state_alph.letters[0]] * len(emission)
 
     for bind in bs_data:
-        if (bind.start >= record.start) and (bind.end <= record.end):
+        if (bind.start >= record.start) and (bind.end <= record.end) and (bind.direction == record.direction):
             s, e = bind.start - record.start, bind.end - record.start
             path[s:e] = [state_alph.letters[1]] * (e - s)
 
     if k > 1:
-        #shorten path by joining k adjacent states - take the most common hidden state of chunk
+        # shorten path by joining k adjacent states - take the most common hidden state of chunk
         path = chunks(path, k)
 
     return Seq("".join(path), state_alph), record
-
 
 
 def get_training_seq(train_data, bs_data, state_alph):
@@ -261,6 +260,7 @@ def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
     # make training sequence with corresponding state paths from first n emissions
     training_seq = get_training_seq(train_data, bs_data, state_alph)
 
+<<<<<<< HEAD
     #training_seq for 2-mer
     if len(em_alph.letters[0]) == 2:
         for seq in training_seq:
@@ -271,6 +271,12 @@ def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
         for seq in training_seq:
             seq.emissions = list(map(lambda t: "".join(t),zip(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])), seq.emissions[2:])))
             seq.states = seq.states[:-2]
+=======
+    #seq for 2kmer
+    # for seq in training_seq:
+    #     seq.emissions = list(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])))
+    #     seq.states = seq.states[:-1]
+>>>>>>> origin/master
 
     if trainer == 'BW':  # ne pride v postev ker imamo znane poti
         bw_trainer = Trainer.BaumWelchTrainer(mm_model)
@@ -328,47 +334,57 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
     recall = TP / ((TP + FN) or 1)
     F1 = 2 * precision * recall / ((precision + recall) or 1)
 
-    print("TP:", TP)
-    print("TN:", TN)
-    print("FP:", FP)
-    print("FN:", FN)
-    print("precision:", precision)
-    print("recall:", recall)
-    print("F1:", F1)
+    # print("TP:", TP)
+    # print("TN:", TN)
+    # print("FP:", FP)
+    # print("FN:", FN)
+    # print("precision:", precision)
+    # print("recall:", recall)
+    # print("F1:", F1)
+    print(precision, recall, F1, sep=",")
 
 
 if __name__ == '__main__':
-    ALPHABET = Kmer2Alphabet()
-
+    ALPHABET = Kmer1Alphabet()
+    STRENGTH_THRESHOLD = 0
+    # DIRECTION = 1  # change also filtering binding_sites
     # Read training data
-    train = list(read_training_data(Kmer1Alphabet()))
+    train = list(read_training_data(ALPHABET))
     # Read testing data
-    test = list(read_testing_data(Kmer1Alphabet()))
+    test = list(read_testing_data(ALPHABET))
     # Read the binding sites
     binding_sites = list(read_binding_sites())
+
+    # train = list(filter(lambda x: x.direction == DIRECTION, train))
+    # test = list(filter(lambda x: x.direction == DIRECTION, test))
+    # binding_sites = list(filter(
+    #         lambda x: (x.direction == x.DIRECTION_NEGATIVE) and (int(x.strength) >= STRENGTH_THRESHOLD), binding_sites))
+    # binding_sites = list(filter(
+    #         lambda x: (x.direction == x.DIRECTION_POSITIVE) and (int(x.strength) >= STRENGTH_THRESHOLD), binding_sites))
 
     # data_analysis(binding_sites, train + test)
 
     # Until we know how to properly parse the negative strand, we'll only use
     # the positive one since the other one does not contain the correct seqs.
-    binding_sites = [x for x in binding_sites
-                     if x.direction == x.DIRECTION_POSITIVE]
+    # binding_sites = [x for x in binding_sites
+    #                 if x.direction == x.DIRECTION_POSITIVE]
 
     # In case we're interested in the nucleotide content within the binding
     # sites
     # print(SeqContent(get_binding_sites(binding_sites, train)))
 
     # train model with these params
-    # print("training model")
-    trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
-                               ALPHABET, 'KST')
-    #
-    # print("evaluating model")
-    # evaluate_model(trained_model, test[:50], binding_sites)
-    #
-    #
+    print("training model")
+    trained_model = train_hmm(train, binding_sites, BinaryStateAlphabet(),
+                              ALPHABET, 'KST')
     print(trained_model.transition_prob)
     print(trained_model.emission_prob)
+
+    print("evaluating model")
+
+    for i, t in enumerate(test):
+        print(i, end=",")
+        evaluate_model(trained_model, [t], binding_sites)
     # paths = viterbi_decode(trained_model, train[:10])
     # print(paths)
 
