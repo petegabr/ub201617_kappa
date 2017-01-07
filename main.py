@@ -1,6 +1,6 @@
 from collections import defaultdict, Counter, Iterable
 from itertools import product
-from Bio.Alphabet import Alphabet, NucleotideAlphabet
+from Bio.Alphabet import Alphabet, NucleotideAlphabet, SingleLetterAlphabet
 from Bio.HMM import MarkovModel, Trainer
 from Bio.Seq import Seq
 
@@ -342,6 +342,70 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
     # print("recall:", recall)
     # print("F1:", F1)
     print(precision, recall, F1, sep=",")
+
+
+def get_most_probable_paths(records, num_states):
+    """Generate a function that can infer the most probable path of a sequence.
+
+    Seeing as only two states cannot model DNA very well, it can make sense to
+    use multiple states. These states are trained using a BW model and a fixed
+    number of states. We then use this model on any sequences to infer the
+    states for its state path.
+
+    Of course, this doesn't account for any binding site states, so we have to
+    include those states on top of these afterwards.
+
+    Parameters
+    ----------
+    records : SeqRecord
+        Training records to train the BW model
+    num_states : int
+        Number of different states to construct. This is currently limited to
+        twice (lowercase and uppercase) the number of letters in the ASCII
+        English alphabet.
+
+    Returns
+    -------
+    List[string]
+        Most probably state paths of the input sequences.
+
+    """
+    # Create a state alphabet with ASCII letters as states
+    class StateAlphabet(SingleLetterAlphabet):
+        import string
+        letters = list(enumerate(string.ascii_letters[:num_states]))
+
+    alphabet = StateAlphabet()
+
+    # Construct training sequences with unknown state paths for the BW model
+    # to infer the best states
+    training_seqs = [
+        Trainer.TrainingSequence(rec.seq, Seq('', alphabet=alphabet))
+        for rec in records]
+
+    # Train the BW model
+    mm_builder = MarkovModel.MarkovModelBuilder(
+        alphabet, records[0].seq.alphabet)
+    mm_builder.allow_all_transitions()
+    mm_builder.set_random_probabilities()
+    mm_model = mm_builder.get_markov_model()
+
+    def stop_condition(log_likelihood_change, num_iterations):
+        """Tell BW when to stop"""
+        if log_likelihood_change < 0.01:
+            return 1
+        elif num_iterations >= 3:
+            return 5
+        else:
+            return 0
+
+    bw_trainer = Trainer.BaumWelchTrainer(mm_model)
+    trained_bw = bw_trainer.train(training_seqs, stop_condition)
+
+    # Infer the most probable paths
+    def get_most_probable_paths(records):
+        return [trained_bw.viterbi(rec.seq, alphabet)[0] for rec in records]
+    return get_most_probable_paths
 
 
 if __name__ == '__main__':
