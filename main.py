@@ -3,6 +3,7 @@ from itertools import product
 from Bio.Alphabet import Alphabet, NucleotideAlphabet, SingleLetterAlphabet
 from Bio.HMM import MarkovModel, Trainer
 from Bio.Seq import Seq
+import sys
 
 from parse import read_training_data, read_testing_data, read_binding_sites
 from data.trained_data import *
@@ -439,19 +440,89 @@ def evaluate_paths(path, decoded_path):
     else:
         return [0, 0, 0, 0]
 
+def decoded_stats(emissions, decoded_path):
+    A_B = 0
+    C_B = 0
+    T_B = 0
+    G_B = 0
+    A_N= 0
+    C_N = 0
+    T_N = 0
+    G_N = 0
+    b_len = 0
+    n_len = 0
+    min_len = min(len(emissions), len(decoded_path))
+    for i in range(min(len(emissions), len(decoded_path))):
+        if decoded_path[i] == "B":
+            b_len += 1
+            if emissions[i] == "A":
+                A_B += 1
+            elif emissions[i] == "C":
+                C_B += 1
+            elif emissions[i] == "T":
+                T_B += 1
+            elif emissions[i] == "G":
+                G_B += 1
+        else:
+            n_len += 1
+            if emissions[i] == "A":
+                A_N += 1
+            elif emissions[i] == "C":
+                C_N += 1
+            elif emissions[i] == "T":
+                T_N += 1
+            elif emissions[i] == "G":
+                G_N += 1
+
+    if b_len == 0:
+        b_len = 1
+
+    if n_len == 0:
+        n_len = 1
+
+    ab = (A_B/b_len) * 100
+    cb = (C_B/b_len) * 100
+    gb = (G_B/b_len) * 100
+    tb = (T_B/b_len) * 100
+    an = (A_N/n_len) * 100
+    cn = (C_N/n_len) * 100
+    gn = (G_N/n_len) * 100
+    tn = (T_N/n_len) * 100
+
+    return [ab, cb, gb, tb], [an, cn, gn, tn]
+
 
 def test_model_new(testing_data, binding_sites, transition_probability, emission_probability, mer_len):
     x = [0, 0, 0, 0]
+    stats_B = [0, 0, 0, 0]
+    stats_N = [0, 0, 0, 0]
     sequences = get_training_seq(testing_data, binding_sites, BinaryStateAlphabet())
+
+    num = 0.0
     for i, sequence in enumerate(sequences):
+        num += 1
         states = str(sequence.states)
         emissions = str(sequence.emissions)
         decoded_states = viterbi_decode_new(emissions, mer_len, transition_probability, emission_probability)
         y = evaluate_paths(states, decoded_states)
+        stats_Bi, stats_Ni = decoded_stats(emissions, decoded_states)
         for i in range(4):
             x[i] += y[i]
+            stats_B[i] += stats_Bi[i]
+            stats_N[i] += stats_Ni[i]
         # print("\r%d" % i, end="", flush=True)
         # print(states.count("B"), decoded_states.count("B"))
+
+    for i in range(4):
+        stats_B[i] = stats_B[i]/num
+        stats_N[i] = stats_N[i]/num
+
+    strB = 'Binding stats: A: %d%%\tC: %d%%\tG: %d%%\tT: %d%%\t' % (
+        stats_B[0], stats_B[1], stats_B[2], stats_B[3])
+    strN = 'Nonbinding stats: A: %d%%\tC: %d%%\tG: %d%%\tT: %d%%\t' % (
+        stats_N[0], stats_N[1], stats_N[2], stats_N[3])
+    print(strB)
+    print(strN)
 
     precision = x[0] / (x[0] + x[2])
     recall = x[0] / (x[0] + x[3])
@@ -581,4 +652,3 @@ if __name__ == '__main__':
     # paths = viterbi_decode(trained_model, train[:10])
     # print(paths)
 
-    # TODO: primerjava decoded testnih primerov z binding sites podatki
