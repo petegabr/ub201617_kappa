@@ -11,7 +11,7 @@ We first used some statistics to better understand our data. Our findings were t
 by the articles, listed as reading material in the Project Presentations PDF
 
 Based on the latter, we decided on observed variables. We decided to try and train our model with 3 different sets of observed variables, namely nucleotide sequences
-of length 1 (single nucleotide), 2 and 3 (k = 1, 2, 3). 
+of length 1 (single nucleotide), 2, 3 and 4 (k = 1, 2, 3, 4). 
 
 As hidden variables, we decided to go with binary alphabet, where state N represents a non-binding site and state B represents a binding site.
 
@@ -24,17 +24,19 @@ known binding sites coordinates.
 After training our model on training dataset, we applied it to test dataset, where we used our own implementation of Viterbi Decoding. We calculated some statistics about 
 the quality of our model. We calculated precision, recall and F1 score. Below are the results for our model:
 
-k	all		precision	recall		F1 score
----------------------------------------------
+k	all		Precision	Recall		F1 score
+----------------------------------------------
 1	no		0.0384		0.1837		0.0636
 1	yes		0.0192		0.0964		0.0320
 2	no		0.2740		0.0831		0.1275
 2	yes		0.0796		0.0086		0.0155
 3	no		0.3906		0.1116		0.1736
 3	yes		0.0508		0.0017		0.0033
+4	no		0.6056		0.0793		0.1402
+4	yes		0.0422		0.0010		0.0020
 
 When evaluating our model, it turned out that there were a lot of test samples, where our model discovered zero binding sites. Therefore, we calculated our performance
 statistics on all results (all = yes) and on the subset, where there were more than zero binding sites discovered (all = no). We can see, that by using larger k, our model 
-finds less binding sites, but with higher precision. 
+finds less binding sites, but with higher precision. Overall, it seems like k=3 is the best choice for our observed variables length.
 
 TODO: katerih nukleotidov je v odkritih binding-site-ih največ? Kater je motif, na katerega se veže TDP-43? Future work and improvements?
