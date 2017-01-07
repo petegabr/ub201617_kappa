@@ -5,7 +5,7 @@ from Bio.HMM import MarkovModel, Trainer
 from Bio.Seq import Seq
 
 from parse import read_training_data, read_testing_data, read_binding_sites
-
+from data.trained_data import *
 
 class BinaryStateAlphabet(Alphabet):
     letters = ['N', 'B']  # N - non binding site, B - binding site
@@ -337,6 +337,129 @@ def evaluate_model(hmm_model, test_data, bs_data, state_alph=BinaryStateAlphabet
     print(precision, recall, F1, sep=",")
 
 
+def train_model_new(training_data, binding_sites, mer_len):
+    transition_alphabet = list('BN')
+    emission_alphabet = ["".join(p) for p in product('ACGT', repeat=mer_len)]
+    transition_probability = {(a, b): 0 for a in transition_alphabet for b in transition_alphabet}
+    emission_probability = {(a, b): 0 for a in transition_alphabet for b in emission_alphabet}
+
+    sequences = get_training_seq(training_data, binding_sites, BinaryStateAlphabet())
+    for i, sequence in enumerate(sequences):
+        print("\r%d" % i, end="", flush=True)
+        states = str(sequence.states)
+        emissions = str(sequence.emissions)
+        for i in range(len(states) - mer_len):
+            state, next_state = states[i:i + 2]
+            transition_probability[(state, next_state)] += 1
+            k_mer = emissions[i:i + mer_len]
+            emission_probability[(state, k_mer)] += 1
+    print()
+
+    # normalize transitions
+    n_transitions = list(filter(lambda x: x[0] == "N", transition_probability))
+    b_transitions = list(filter(lambda x: x[0] == "B", transition_probability))
+    n_count = sum(map(lambda x: transition_probability[x], n_transitions))
+    b_count = sum(map(lambda x: transition_probability[x], b_transitions))
+    for n, b in zip(n_transitions, b_transitions):
+        transition_probability[n] /= n_count
+        transition_probability[b] /= b_count
+
+    # normalize emissions
+    n_emissions = list(filter(lambda x: x[0] == "N", emission_probability))
+    b_emissions = list(filter(lambda x: x[0] == "B", emission_probability))
+    n_count = sum(map(lambda x: emission_probability[x], n_emissions))
+    b_count = sum(map(lambda x: emission_probability[x], b_emissions))
+    for n, b in zip(n_emissions, b_emissions):
+        emission_probability[n] /= n_count
+        emission_probability[b] /= b_count
+
+    return transition_probability, emission_probability
+
+
+def viterbi_decode_new(emissions, mer_len, transition_probability, emission_probability):
+    lin = [{"B": (0.5, None), "N": (0.5, None)}]
+    for i in range(len(emissions) - mer_len + 1):
+        emitted_symbols = emissions[i:i + mer_len]
+        l, r = lin[-1]["B"], lin[-1]["N"]
+        # B
+        eb = emission_probability[("B", emitted_symbols)]
+        t_lb = (l[0] * eb * transition_probability[("B", "B")], "B")
+        t_rb = (r[0] * eb * transition_probability[("N", "B")], "N")
+        a = max(t_lb, t_rb)
+        # N
+        en = emission_probability[("N", emitted_symbols)]
+        t_ln = (l[0] * en * transition_probability[("B", "N")], "B")
+        t_rn = (r[0] * en * transition_probability[("N", "N")], "N")
+        b = max(t_ln, t_rn)
+        if (a[0] < 0.1) and (b[0] < 0.1):  # because of large values
+            x, y = a
+            a = (x * 10, y)
+            x, y = b
+            b = (x * 10, y)
+        lin.append({"B": a, "N": b})
+
+    lin = lin[::-1]
+    decoded_path = []
+
+    current = max(lin[0]["B"], lin[0]["N"])[1]
+    for l in lin:
+        decoded_path.append(current)
+        current = l[current][1]
+
+    return "".join(decoded_path[::-1])
+
+
+def evaluate_paths(path, decoded_path):
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
+    for i in range(min(len(path), len(decoded_path))):
+        if (path[i] == "B") and (decoded_path[i] == "B"):
+            TP += 1
+        elif (path[i] == "N") and (decoded_path[i] == "N"):
+            TN += 1
+        elif (path[i] == "N") and (decoded_path[i] == "B"):
+            FP += 1
+        elif (path[i] == "B") and (decoded_path[i] == "N"):
+            FN += 1
+
+    precision = TP / ((TP + FP) or 1)
+    recall = TP / ((TP + FN) or 1)
+    F1 = 2 * precision * recall / ((precision + recall) or 1)
+
+    # return TP, TN, FP, FN
+
+    # print(precision, recall, F1, sep=",")
+    # if F1 > 0:
+    #     print(TP, TN, FP, FN, sep=",")
+    # return [TP, TN, FP, FN]
+    if F1 > 0:
+        return [TP, TN, FP, FN]
+    else:
+        return [0, 0, 0, 0]
+
+
+def test_model_new(testing_data, binding_sites, transition_probability, emission_probability, mer_len):
+    x = [0, 0, 0, 0]
+    sequences = get_training_seq(testing_data, binding_sites, BinaryStateAlphabet())
+    for i, sequence in enumerate(sequences):
+        states = str(sequence.states)
+        emissions = str(sequence.emissions)
+        decoded_states = viterbi_decode_new(emissions, mer_len, transition_probability, emission_probability)
+        y = evaluate_paths(states, decoded_states)
+        for i in range(4):
+            x[i] += y[i]
+        # print("\r%d" % i, end="", flush=True)
+        # print(states.count("B"), decoded_states.count("B"))
+
+    precision = x[0] / (x[0] + x[2])
+    recall = x[0] / (x[0] + x[3])
+    F1 = 2 * precision * recall / (precision + recall)
+    print(precision, recall, F1)
+
+
+
 def get_most_probable_paths(records, num_states):
     """Generate a function that can infer the most probable path of a sequence.
 
@@ -430,12 +553,25 @@ if __name__ == '__main__':
     # sites
     # print(SeqContent(get_binding_sites(binding_sites, train)))
 
+    # TRAINING
+    mer_len = 4
+    print("training")
+    # transition_probability, emission_probability = train_model_new(train, binding_sites, mer_len)
+    emission_probability = emission_probability_4
+    print(transition_probability)
+    print(emission_probability)
+
+
+    # TESTING
+    print("testing")
+    test_model_new(test, binding_sites, transition_probability, emission_probability, mer_len)
+
     # train model with these params
-    print("training model")
-    trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
-                              ALPHABET, 'KST')
-    print(trained_model.transition_prob)
-    print(trained_model.emission_prob)
+    # print("training model")
+    # trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
+    #                           ALPHABET, 'KST')
+    # print(trained_model.transition_prob)
+    # print(trained_model.emission_prob)
 
     # print("evaluating model")
     #
