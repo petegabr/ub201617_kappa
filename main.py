@@ -261,10 +261,16 @@ def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
     # make training sequence with corresponding state paths from first n emissions
     training_seq = get_training_seq(train_data, bs_data, state_alph)
 
-    #seq for 2kmer
-    for seq in training_seq:
-        seq.emissions = list(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])))
-        seq.states = seq.states[:-1]
+    #training_seq for 2-mer
+    if len(em_alph.letters[0]) == 2:
+        for seq in training_seq:
+            seq.emissions = list(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])))
+            seq.states = seq.states[:-1]
+    #training_seq for 3-mer
+    elif len(em_alph.letters[0])==3:
+        for seq in training_seq:
+            seq.emissions = list(map(lambda t: "".join(t),zip(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])), seq.emissions[2:])))
+            seq.states = seq.states[:-2]
 
     if trainer == 'BW':  # ne pride v postev ker imamo znane poti
         bw_trainer = Trainer.BaumWelchTrainer(mm_model)
