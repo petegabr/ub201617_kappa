@@ -260,7 +260,6 @@ def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
     # make training sequence with corresponding state paths from first n emissions
     training_seq = get_training_seq(train_data, bs_data, state_alph)
 
-<<<<<<< HEAD
     #training_seq for 2-mer
     if len(em_alph.letters[0]) == 2:
         for seq in training_seq:
@@ -271,12 +270,6 @@ def train_hmm(train_data, bs_data, state_alph, em_alph, trainer='BW'):
         for seq in training_seq:
             seq.emissions = list(map(lambda t: "".join(t),zip(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])), seq.emissions[2:])))
             seq.states = seq.states[:-2]
-=======
-    #seq for 2kmer
-    # for seq in training_seq:
-    #     seq.emissions = list(map(lambda t: "".join(t), zip(seq.emissions, seq.emissions[1:])))
-    #     seq.states = seq.states[:-1]
->>>>>>> origin/master
 
     if trainer == 'BW':  # ne pride v postev ker imamo znane poti
         bw_trainer = Trainer.BaumWelchTrainer(mm_model)
@@ -409,13 +402,13 @@ def get_most_probable_paths(records, num_states):
 
 
 if __name__ == '__main__':
-    ALPHABET = Kmer1Alphabet()
+    ALPHABET = Kmer3Alphabet()
     STRENGTH_THRESHOLD = 0
     # DIRECTION = 1  # change also filtering binding_sites
     # Read training data
-    train = list(read_training_data(ALPHABET))
+    train = list(read_training_data(Kmer1Alphabet()))
     # Read testing data
-    test = list(read_testing_data(ALPHABET))
+    test = list(read_testing_data(Kmer1Alphabet()))
     # Read the binding sites
     binding_sites = list(read_binding_sites())
 
@@ -439,16 +432,16 @@ if __name__ == '__main__':
 
     # train model with these params
     print("training model")
-    trained_model = train_hmm(train, binding_sites, BinaryStateAlphabet(),
+    trained_model = train_hmm(train[:50], binding_sites, BinaryStateAlphabet(),
                               ALPHABET, 'KST')
     print(trained_model.transition_prob)
     print(trained_model.emission_prob)
 
-    print("evaluating model")
-
-    for i, t in enumerate(test):
-        print(i, end=",")
-        evaluate_model(trained_model, [t], binding_sites)
+    # print("evaluating model")
+    #
+    # for i, t in enumerate(test):
+    #     print(i, end=",")
+    #     evaluate_model(trained_model, [t], binding_sites)
     # paths = viterbi_decode(trained_model, train[:10])
     # print(paths)
 
