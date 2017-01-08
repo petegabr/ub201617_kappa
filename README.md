@@ -69,7 +69,8 @@ Consistently with the articles and our findings on training dataset, the discove
 prefers binding to TG rich sequences.
 
 Most probable binding motifs
-
+k-mer | 1. | 2. | 3. | 4.
+--- | --- | --- | --- | ---
 1-mer | T 0.42 | G 0.25 | A 0.20 | C 0.13
 2-mer | TG 0.15 | TT 0.14 | GT 0.13 | AT 0.08
 3-mer | TGT 0.10 | GTG 0.08 | TTT 0.07 | ATG 0.04
