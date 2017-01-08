@@ -395,10 +395,8 @@ if __name__ == '__main__':
     
     # TRAINING
     print("training")
-    mer_len = 1
+    mer_len = 2
     print("mer_len:", mer_len)
-    train_data = train_data[:20]
-    test_data = train_data
     transition_probability, emission_probability = train_model(train_data, binding_sites, mer_len)
     #emission_probability = emission_probability_1
     #print(transition_probability)

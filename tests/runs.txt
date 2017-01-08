@@ -1,4 +1,4 @@
-test data was the same as train data
+TEST AND TRAIN DATA WAS THE SAME IN THESE RUNS
 
 BINDING NUCLEOTIDES CONTENT (train):
          A: 19% C: 13%  G: 25%  T: 41%
@@ -69,11 +69,7 @@ recall: 7.537814703763881e-05
 F1: 0.00014897455845596145
 
 #run 6
-training
 mer_len: 6
-539/539
-testing
-539/539
 Binds content:
          A: 12% C: 12%  G: 22%  T: 53%
 TP: 9
@@ -85,11 +81,7 @@ recall: 7.537814703763881e-05
 F1: 0.00014927724931788588
 
 #run 7
-training
 mer_len: 10
-539/539
-testing
-539/539
 Binds content:
          A: 17% C: 8%   G: 22%  T: 51%
 TP: 14
@@ -99,3 +91,103 @@ FN: 119384
 precision: 0.0498220640569395
 recall: 0.00011725489539188261
 F1: 0.00023395917412411533
+
+
+
+TEST AND TRAIN DATA WAS DIFFERENT IN THESE RUNS
+
+#run 1
+mer_len: 1
+Binds content:
+         A: 17% C: 12%  G: 20%  T: 49%
+TP: 12128
+TN: 63258149
+FP: 622951
+FN: 114287
+precision: 0.01909683677148827
+recall: 0.09593798204327018
+F1: 0.031853172841808344
+
+#run2
+mer_len: 2
+Binds content:
+         A: 14% C: 9%   G: 27%  T: 48%
+TP: 1060
+TN: 63869544
+FP: 11556
+FN: 125355
+precision: 0.08402029169308814
+recall: 0.00838508088438872
+F1: 0.015248397839330798
+
+#run 3
+mer_len: 3
+Binds content:
+         A: 15% C: 9%   G: 22%  T: 52%
+TP: 216
+TN: 63878124
+FP: 2976
+FN: 126199
+precision: 0.06766917293233082
+recall: 0.0017086579915358145
+F1: 0.0033331533019049894
+
+#run 4
+mer_len: 4
+Binds content:
+         A: 15% C: 9%   G: 23%  T: 50%
+TP: 129
+TN: 63878958
+FP: 2142
+FN: 126286
+precision: 0.05680317040951123
+recall: 0.0010204485227227782
+F1: 0.0020048800957369103
+
+#run 5
+mer_len: 5
+Binds content:
+         A: 15% C: 10%  G: 23%  T: 50%
+TP: 113
+TN: 63879409
+FP: 1691
+FN: 126302
+precision: 0.06263858093126386
+recall: 0.0008938812640904956
+F1: 0.00176260928567529
+
+#run 6
+mer_len: 6
+Binds content:
+         A: 14% C: 11%  G: 25%  T: 48%
+TP: 100
+TN: 63879676
+FP: 1424
+FN: 126315
+precision: 0.06561679790026247
+recall: 0.000791045366451766
+F1: 0.001563244983937658
+
+#run7
+mer_len: 9
+Binds content:
+         A: 15% C: 11%  G: 26%  T: 46%
+TP: 3
+TN: 63880668
+FP: 432
+FN: 126412
+precision: 0.006896551724137931
+recall: 2.373136099355298e-05
+F1: 4.729996058336618e-05
+
+#run 8
+mer_len: 10
+Binds content:
+         A: 16% C: 9%   G: 23%  T: 50%
+TP: 0
+TN: 63880929
+FP: 171
+FN: 126415
+precision: 0.0
+recall: 0.0
+F1: 0.0
