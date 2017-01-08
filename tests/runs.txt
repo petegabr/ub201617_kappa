@@ -1,0 +1,101 @@
+test data was the same as train data
+
+BINDING NUCLEOTIDES CONTENT (train):
+         A: 19% C: 13%  G: 25%  T: 41%
+BINDING NUCLEOTIDES CONTENT (test):
+         A: 19% C: 13%  G: 24%  T: 42%
+BINDING NUCLEOTIDES CONTENT (train + test):
+         A: 19% C: 13%  G: 25%  T: 42%
+
+
+#run 1
+mer_len: 1
+Binds content:
+         A: 17% C: 12%  G: 21%  T: 48%
+TP: 10353
+TN: 66306130
+FP: 629454
+FN: 109045
+precision: 0.016181442216168313
+recall: 0.08670999514229719
+F1: 0.027273266113895456
+
+#run 2
+mer_len: 2
+Binds content:
+         A: 14% C: 9%   G: 27%  T: 48%
+TP: 1367
+TN: 66924305
+FP: 11279
+FN: 118031
+precision: 0.10809742210975802
+recall: 0.011449103000050252
+F1: 0.02070521947229711
+
+#run 3
+mer_len: 3
+Binds content:
+         A: 11% C: 9%   G: 24%  T: 53%
+TP: 103
+TN: 66933147
+FP: 2437
+FN: 119295
+precision: 0.04055118110236221
+recall: 0.000862661016097422
+F1: 0.0016893831291311975
+
+#run 4
+mer_len: 4
+Binds content:
+         A: 12% C: 8%   G: 25%  T: 53%
+TP: 57
+TN: 66933981
+FP: 1603
+FN: 119341
+precision: 0.03433734939759036
+recall: 0.0004773949312383792
+F1: 0.000941697368203671
+
+#run 5
+mer_len: 5
+Binds content:
+         A: 13% C: 8%   G: 24%  T: 53%
+TP: 9
+TN: 66934165
+FP: 1419
+FN: 119389
+precision: 0.0063025210084033615
+recall: 7.537814703763881e-05
+F1: 0.00014897455845596145
+
+#run 6
+training
+mer_len: 6
+539/539
+testing
+539/539
+Binds content:
+         A: 12% C: 12%  G: 22%  T: 53%
+TP: 9
+TN: 66934410
+FP: 1174
+FN: 119389
+precision: 0.0076077768385460695
+recall: 7.537814703763881e-05
+F1: 0.00014927724931788588
+
+#run 7
+training
+mer_len: 10
+539/539
+testing
+539/539
+Binds content:
+         A: 17% C: 8%   G: 22%  T: 51%
+TP: 14
+TN: 66935317
+FP: 267
+FN: 119384
+precision: 0.0498220640569395
+recall: 0.00011725489539188261
+F1: 0.00023395917412411533
