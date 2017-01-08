@@ -401,7 +401,7 @@ if __name__ == '__main__':
     
     # TRAINING
     print("training")
-    for mer_len in range(1, 7):
+    for mer_len in range(7, 11):
         print("mer_len:", mer_len)
         transition_probability, emission_probability = train_model(train_data, binding_sites, mer_len)
         #emission_probability = emission_probability_4
