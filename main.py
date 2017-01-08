@@ -370,6 +370,12 @@ def get_most_probable_paths(records, num_states):
     return get_most_probable_paths
 
 
+def get_most_probable_motifs(emission_probability, n=1):
+    motifs = filter(lambda x: x[0][0] == "B", emission_probability.items())
+    motifs = list(map(lambda x: (x[1], x[0][1]), motifs))
+    motifs.sort(reverse=True)
+    return motifs[:n]
+    
 if __name__ == '__main__':
     # Read training data
     train_data = list(read_training_data())
@@ -395,13 +401,19 @@ if __name__ == '__main__':
     
     # TRAINING
     print("training")
-    mer_len = 2
-    print("mer_len:", mer_len)
-    transition_probability, emission_probability = train_model(train_data, binding_sites, mer_len)
-    #emission_probability = emission_probability_1
-    #print(transition_probability)
-    #print(emission_probability)
-
+    for mer_len in range(1, 7):
+        print("mer_len:", mer_len)
+        transition_probability, emission_probability = train_model(train_data, binding_sites, mer_len)
+        #emission_probability = emission_probability_4
+        #print(transition_probability)
+        #print(emission_probability)
+    
+        print("Most probable binding motifs:")
+        for a in get_most_probable_motifs(emission_probability, 10):
+            print("\t", a[1], a[0])
+    
+    exit()
+    
     # TESTING
     print("testing")
     evaluate_model(test_data, binding_sites, transition_probability, emission_probability, mer_len)
