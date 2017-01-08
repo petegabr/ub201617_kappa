@@ -48,16 +48,16 @@ the quality of our model. We calculated precision, recall and F1 score. For TP, 
 
 Below are the results for our model:
 
-k | all   | Precision	Recall | F1 score
---- | --- | --- | ---
-1 | no	| 0.0384 | 0.1837 | 0.0636
-1 | yes	| 0.0192 | 0.0964 | 0.0320
-2 | no	| 0.2740 | 0.0831 | 0.1275
-2 | yes	| 0.0796 | 0.0086 | 0.0155
-3 | no	| 0.3906 | 0.1116 | 0.1736
-3 | yes	| 0.0508 | 0.0017 | 0.0033
-4 | no	| 0.6056 | 0.0793 | 0.1402
-4 | yes	| 0.0422 | 0.0010 | 0.0020
+k | Binds content | TP | FP
+--- | --- | ---
+1 | A: 17% C: 12%  G: 20%  T: 49%	| 12128 | 622951
+2 | A: 14% C: 9%   G: 27%  T: 48%	| 1060 | 11556
+3 | A: 15% C: 9%   G: 22%  T: 52%	| 216| 2976
+4 | A: 15% C: 9%   G: 23%  T: 50%	| 129 | 2142
+5 | A: 15% C: 10%  G: 23%  T: 50%	| 113| 1691
+6 | A: 14% C: 11%  G: 25%  T: 48%   | 100 | 1424
+9 | A: 15% C: 11%  G: 26%  T: 46%   | 3 | 432
+10 | A: 16% C: 9%   G: 23%  T: 50%   | 0 | 171
 
 ![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/k-F1.png "Relation between k and F1")
 
