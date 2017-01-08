@@ -39,4 +39,7 @@ When evaluating our model, it turned out that there were a lot of test samples, 
 statistics on all results (all = yes) and on the subset, where there were more than zero binding sites discovered (all = no). We can see, that by using larger k, our model 
 finds less binding sites, but with higher precision. Overall, it seems like k=3 is the best choice for our observed variables length.
 
-TODO: katerih nukleotidov je v odkritih binding-site-ih največ? Kater je motif, na katerega se veže TDP-43? Future work and improvements?
+Consistently with the articles and our findings on training dataset, the disvoered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43 
+prefers binding to TG rich sequences.
+
+FUTURE WORK AND IMPROVEMENTS
