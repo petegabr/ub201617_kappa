@@ -49,7 +49,7 @@ the quality of our model. We calculated precision, recall and F1 score. For TP, 
 Below are the results for our model:
 
 k | Binds content | TP | FP
---- | --- | ---
+--- | --- | --- | ---
 1 | A: 17% C: 12%  G: 20%  T: 49%	| 12128 | 622951
 2 | A: 14% C: 9%   G: 27%  T: 48%	| 1060 | 11556
 3 | A: 15% C: 9%   G: 22%  T: 52%	| 216| 2976
@@ -68,4 +68,5 @@ finds less binding sites, but with higher precision. Overall, it seems like k=3 
 Consistently with the articles and our findings on training dataset, the discovered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43
 prefers binding to TG rich sequences.
 
-### FUTURE WORK AND IMPROVEMENTS
+### Future Work and Improvements
+
