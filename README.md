@@ -1,9 +1,13 @@
 # ub201617_kappa
 
-PROJECT A1 (research)
+## PROJECT A1 (research)
 
 Our task was to define hidden and observed variables of a Hidden Markov Model, that models binding sites of RBP, called TDP-43. We were given a training 
 and a test dataset and coordinates, where TDP-43 is reported to bind.
+
+### Data
+
+Our data consisted of genes and binding sites of RNA-binding proteins on given genes. Genes were then separated on training set and testing set.
 
 We first used some statistics to better understand our data. Our findings were the following:
 1. Not all binding sites have a corresponding DNA sequence. About 800 binding sites are not matched, which means they cannot be used in the learning process
@@ -13,33 +17,53 @@ by the articles, listed as reading material in the Project Presentations PDF
 Based on the latter, we decided on observed variables. We decided to try and train our model with 3 different sets of observed variables, namely nucleotide sequences
 of length 1 (single nucleotide), 2, 3 and 4 (k = 1, 2, 3, 4). 
 
+Each of our records had a strand attribute, which is what we had to take into consideration when training our model. That is why we decided to make a reverse complement
+of all the records on negative strand and recalculate binding site start and end coordinates accordingly.
+
+---
+
+### Hidden Markov Model
+
 As hidden variables, we decided to go with binary alphabet, where state N represents a non-binding site and state B represents a binding site.
 
-Each of our records had a strand attribute, which is what we had to take into consideration when training our model. That is why we decided to make a reverse complement
-of all the records on negative strand and recalculate binding site start and end coordinates accordingly. 
+---
 
-To train our model we used Known State Trainer, which is already implemented in biopython. For training purposes, we generated a state path for each DNA sequence using 
-known binding sites coordinates. 
+### Training
+
+To train our model we used Known State Trainer, which is already implemented in biopython. For training purposes, we generated a state path for each DNA sequence using
+known binding sites coordinates. With Known State Trainer in biopython we could not analyze k-mers (k > 1), so we implemented our own Known State Trainer, which returned
+almost the same results for 1-mers (difference of 0.5%). Our implementation was also faster and we were able to use arbitrary k-mers.
+
+---
+
+### Testing and Evaluating
 
 After training our model on training dataset, we applied it to test dataset, where we used our own implementation of Viterbi Decoding. We calculated some statistics about 
-the quality of our model. We calculated precision, recall and F1 score. Below are the results for our model:
+the quality of our model. We calculated precision, recall and F1 score. For TP, TN, FP, FN we took the following:
 
-k	all		Precision	Recall		F1 score
-----------------------------------------------
-1	no		0.0384		0.1837		0.0636
-1	yes		0.0192		0.0964		0.0320
-2	no		0.2740		0.0831		0.1275
-2	yes		0.0796		0.0086		0.0155
-3	no		0.3906		0.1116		0.1736
-3	yes		0.0508		0.0017		0.0033
-4	no		0.6056		0.0793		0.1402
-4	yes		0.0422		0.0010		0.0020
+* True positive (TP): model recognised binding site as binding site (B -> B)
+* True negative (TN): model recognised non-binding site as non-binding site (N -> N)
+* False positive (FP): model recognised non-binding site as binding site (N -> B)
+* False negative (FN): model recognised binding site as non-binding site (B -> N)
+
+Below are the results for our model:
+
+k | all   | Precision	Recall | F1 score
+--- | --- | --- | ---
+1 | no	| 0.0384 | 0.1837 | 0.0636
+1 | yes	| 0.0192 | 0.0964 | 0.0320
+2 | no	| 0.2740 | 0.0831 | 0.1275
+2 | yes	| 0.0796 | 0.0086 | 0.0155
+3 | no	| 0.3906 | 0.1116 | 0.1736
+3 | yes	| 0.0508 | 0.0017 | 0.0033
+4 | no	| 0.6056 | 0.0793 | 0.1402
+4 | yes	| 0.0422 | 0.0010 | 0.0020
 
 When evaluating our model, it turned out that there were a lot of test samples, where our model discovered zero binding sites. Therefore, we calculated our performance
 statistics on all results (all = yes) and on the subset, where there were more than zero binding sites discovered (all = no). We can see, that by using larger k, our model 
 finds less binding sites, but with higher precision. Overall, it seems like k=3 is the best choice for our observed variables length.
 
-Consistently with the articles and our findings on training dataset, the disvoered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43 
+Consistently with the articles and our findings on training dataset, the discovered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43
 prefers binding to TG rich sequences.
 
-FUTURE WORK AND IMPROVEMENTS
+### FUTURE WORK AND IMPROVEMENTS
