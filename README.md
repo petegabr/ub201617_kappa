@@ -70,6 +70,8 @@ prefers binding to TG rich sequences.
 
 Most probable binding motifs
 
+According to our model, these are the most probable binding motifs for different k-mers:
+
 k-mer | 1. most common | 2. most common | 3. most common | 4. most common
 --- | --- | --- | --- | ---
 1-mer | T 0.42 | G 0.25 | A 0.20 | C 0.13
@@ -78,6 +80,9 @@ k-mer | 1. most common | 2. most common | 3. most common | 4. most common
 4-mer | TGTG 0.07 | GTGT 0.06 | TTTT 0.04 | ATGT 0.02
 5-mer | TGTGT 0.05 | GTGTG 0.05 | TTTTT 0.02 | TGTAT 0.01
 6-mer | TGTGTG 0.04 | GTGTGT 0.04 |  TTTTTT 0.01 | TGTGTA 0.01
+
+The two most probable motifs for 5-mer "TGTGT" and "GTGTG" are also presented in the article "Tollervey, James R., Curk, Tomaž et al. "Characterizing the RNA targets and
+position-dependent splicing regulation by TDP-43." Nature Neuroscience 14.4(2011): 452-458."
 
 ### Future Work and Improvements
 
