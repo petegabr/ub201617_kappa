@@ -70,3 +70,9 @@ prefers binding to TG rich sequences.
 
 ### Future Work and Improvements
 
+The models we trained have some limitations.
+
+1. We always trained models using fixed kmers. Perhaps we could obtain better results if we tried mixing the alphabets and different kmer lengths e.g. so we would differentiate the sequences AC from ACG for instance.
+2. We used a first order HMM, perhaps using a second or third order Markov model may produce better results.
+3. Our model was limited to two states, a Binding and a Non-binding state. This meant that the model had to generalise the non-binding state very broadly, although we know the genome contains several different states (e.g. promoter regions, CpG islands, ...). Our idea was to use a Baum-Welsh model to model the genome to get _n_ best states that would produce the initial state paths, but that turned out to be far to slow. Perhaps using data available on the Internet to get the initial states would produce better results.
+4. Different models may produce better results. Perhaps an HMM is too simplistic, and some more complex models could be used e.g. deep neural networks are especially popular at the moment and are producing very good results in most areas, but perhaps even simpler models such as an SVM might produce better results as well.
