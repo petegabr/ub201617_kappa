@@ -68,6 +68,15 @@ finds less binding sites, but with higher precision. Overall, it seems like k=3 
 Consistently with the articles and our findings on training dataset, the discovered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43
 prefers binding to TG rich sequences.
 
+Most probable binding motifs
+
+1-mer | T 0.42 | G 0.25 | A 0.20 | C 0.13
+2-mer | TG 0.15 | TT 0.14 | GT 0.13 | AT 0.08
+3-mer | TGT 0.10 | GTG 0.08 | TTT 0.07 | ATG 0.04
+4-mer | TGTG 0.07 | GTGT 0.06 | TTTT 0.04 | ATGT 0.02
+5-mer | TGTGT 0.05 | GTGTG 0.05 | TTTTT 0.02 | TGTAT 0.01
+6-mer | TGTGTG 0.04 | GTGTGT 0.04 |  TTTTTT 0.01 | TGTGTA 0.01
+
 ### Future Work and Improvements
 
 The models we trained have some limitations.
