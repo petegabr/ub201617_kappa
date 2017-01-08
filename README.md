@@ -59,6 +59,8 @@ k | all   | Precision	Recall | F1 score
 4 | no	| 0.6056 | 0.0793 | 0.1402
 4 | yes	| 0.0422 | 0.0010 | 0.0020
 
+![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/k-F1.png "Relation between k and F1")
+
 When evaluating our model, it turned out that there were a lot of test samples, where our model discovered zero binding sites. Therefore, we calculated our performance
 statistics on all results (all = yes) and on the subset, where there were more than zero binding sites discovered (all = no). We can see, that by using larger k, our model 
 finds less binding sites, but with higher precision. Overall, it seems like k=3 is the best choice for our observed variables length.
