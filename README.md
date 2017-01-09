@@ -80,6 +80,10 @@ k-mer | 1. most common | 2. most common | 3. most common | 4. most common
 5-mer | TGTGT 0.05 | GTGTG 0.05 | TTTTT 0.02 | TGTAT 0.01
 6-mer | TGTGTG 0.04 | GTGTGT 0.04 |  TTTTTT 0.01 | TGTGTA 0.01
 
+The following graphs display the different distributions of motifs in the two hidden states for the different k-mers we tested as emitted variables.
+
+![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/1mer.png "Distribution of different motifs in different states for 1-mers")
+
 ![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/2mer.png "Distribution of different motifs in different states for 2-mers")
 
 ![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/3mer.png "Distribution of different motifs in different states for 3-mers")
