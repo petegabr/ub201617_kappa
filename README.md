@@ -48,22 +48,23 @@ the quality of our model. We calculated precision, recall and F1 score. For TP, 
 
 Below are the results for our model:
 
-k | Binds content | TP | FP | TN | FN
---- | --- | --- | --- | --- | ---
-1 | A: 17% C: 12%  G: 20%  T: 49%	| 12128 | 622951 | 63258149 | 114287
-2 | A: 14% C: 9%   G: 27%  T: 48%	| 1060 | 11556 | 63869544 | 125355
-3 | A: 15% C: 9%   G: 22%  T: 52%	| 216| 2976 | 63878124 | 126199
-4 | A: 15% C: 9%   G: 23%  T: 50%	| 129 | 2142 | 63878958 | 126286
-5 | A: 15% C: 10%  G: 23%  T: 50%	| 113| 1691 | 63879409 | 126302
-6 | A: 14% C: 11%  G: 25%  T: 48%   | 100 | 1424 | 63879676 | 126315
-9 | A: 15% C: 11%  G: 26%  T: 46%   | 3 | 432 | 63880668 | 126412
-10 | A: 16% C: 9%   G: 23%  T: 50%   | 0 | 171 | 63880929 | 126415
+k | Binds content | TP | FP | TN | FN | Precision
+--- | --- | --- | --- | --- | --- | ---
+1 | A: 17% C: 12%  G: 20%  T: 49%	| 12128 | 622951 | 63258149 | 114287 | 1.9% 
+2 | A: 14% C: 9%   G: 27%  T: 48%	| 1060 | 11556 | 63869544 | 125355 | 8.4%
+3 | A: 15% C: 9%   G: 22%  T: 52%	| 216| 2976 | 63878124 | 126199 | 6.8%
+4 | A: 15% C: 9%   G: 23%  T: 50%	| 129 | 2142 | 63878958 | 126286 | 5.7%
+5 | A: 15% C: 10%  G: 23%  T: 50%	| 113| 1691 | 63879409 | 126302 | 6.3%
+6 | A: 14% C: 11%  G: 25%  T: 48%   | 100 | 1424 | 63879676 | 126315 | 6.6%
+9 | A: 15% C: 11%  G: 26%  T: 46%   | 3 | 432 | 63880668 | 126412 | 0.7%
+10 | A: 16% C: 9%   G: 23%  T: 50%   | 0 | 171 | 63880929 | 126415 | 0%
 
 ![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/k-F1.png "Relation between k and F1")
 
 When evaluating our model, it turned out that there were a lot of test samples, where our model discovered zero binding sites. Therefore, we calculated our performance
 statistics on all results (all = yes) and on the subset, where there were more than zero binding sites discovered (all = no). We can see, that by using larger k, our model 
-finds less binding sites, but with higher precision. Overall, it seems like k=3 is the best choice for our observed variables length.
+finds less binding sites, but with higher precision. We chose our best model parameters based on precision, because we are interested in
+the amount of binding sites we are able to identify correctly. Overall, it seems like k=2 is the best choice for our observed variables length.
 
 Consistently with the articles and our findings on training dataset, the discovered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43
 prefers binding to TG rich sequences.
