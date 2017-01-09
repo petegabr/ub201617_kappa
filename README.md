@@ -68,7 +68,7 @@ finds less binding sites, but with higher precision. Overall, it seems like k=3 
 Consistently with the articles and our findings on training dataset, the discovered binding sites are rich with T and G nucleotides. We can, therefore, conclude, that TDP-43
 prefers binding to TG rich sequences.
 
-Most probable binding motifs
+### Most probable binding motifs
 
 According to our model, these are the most probable binding motifs for different k-mers:
 
