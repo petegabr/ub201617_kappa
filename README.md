@@ -59,8 +59,6 @@ k | Binds content | TP | FP | TN | FN | Precision
 9 | A: 15% C: 11%  G: 26%  T: 46%   | 3 | 432 | 63880668 | 126412 | 0.7%
 10 | A: 16% C: 9%   G: 23%  T: 50%   | 0 | 171 | 63880929 | 126415 | 0%
 
-![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/k-F1.png "Relation between k and F1")
-
 When evaluating our model, it turned out that there were a lot of test samples, where our model discovered zero binding sites. Therefore, we calculated our performance
 statistics on all results (all = yes) and on the subset, where there were more than zero binding sites discovered (all = no). We can see, that by using larger k, our model 
 finds less binding sites, but with higher precision. We chose our best model parameters based on precision, because we are interested in
@@ -81,6 +79,10 @@ k-mer | 1. most common | 2. most common | 3. most common | 4. most common
 4-mer | TGTG 0.07 | GTGT 0.06 | TTTT 0.04 | ATGT 0.02
 5-mer | TGTGT 0.05 | GTGTG 0.05 | TTTTT 0.02 | TGTAT 0.01
 6-mer | TGTGTG 0.04 | GTGTGT 0.04 |  TTTTTT 0.01 | TGTGTA 0.01
+
+![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/2mer.png "Distribution of different motifs in different states for 2-mers")
+
+![alt text](https://github.com/petergabrovsek/ub201617_kappa/blob/master/Figures/3mer.png "Distribution of different motifs in different states for 3-mers")
 
 The two most probable motifs for 5-mer "TGTGT" and "GTGTG" are also presented in the article "Tollervey, James R., Curk, Tomaž et al. "Characterizing the RNA targets and
 position-dependent splicing regulation by TDP-43." Nature Neuroscience 14.4(2011): 452-458."
